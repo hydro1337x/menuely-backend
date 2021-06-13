@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common'
 import { TypeOrmConfigService } from './config/type-orm-config.service'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ConfigModule } from '@nestjs/config'
-import Joi from '@hapi/joi'
+import * as Joi from '@hapi/joi'
+import { FilesModule } from './files/files.module'
 
 @Module({
   imports: [
@@ -15,9 +16,8 @@ import Joi from '@hapi/joi'
         DATABASE_PORT: Joi.number().default(5432),
         JWT_EXPIRATION: Joi.number().default(3600)
       })
-    })
-  ],
-  controllers: [],
-  providers: []
+    }),
+    FilesModule
+  ]
 })
 export class AppModule {}
