@@ -11,6 +11,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         type: 'postgres',
         url: process.env.DATABASE_URL,
         autoLoadEntities: true,
+        synchronize: true,
         extra: {
           ssl: {
             rejectUnauthorized: false
