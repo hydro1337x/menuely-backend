@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  HttpCode,
   Post,
   UseGuards,
   ValidationPipe
@@ -30,6 +31,7 @@ export class AuthController {
   }
 
   @Post('login/user')
+  @HttpCode(200)
   @UseGuards(UserLocalAuthGuard)
   loginUser(@AuthenticatedUser() user: User): Promise<UserAuthResponseDto> {
     return this.authService.loginUser(user)
@@ -46,6 +48,7 @@ export class AuthController {
   }
 
   @Post('login/restaurant')
+  @HttpCode(200)
   @UseGuards(RestaurantLocalAuthGuard)
   loginRestaurant(
     @AuthenticatedRestaurant() restaurant: Restaurant
