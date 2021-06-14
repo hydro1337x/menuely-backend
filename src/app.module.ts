@@ -4,8 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { ConfigModule } from '@nestjs/config'
 import * as Joi from '@hapi/joi'
 import { FilesModule } from './files/files.module'
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module'
+import { AuthModule } from './auth/auth.module'
+import { RestaurantsModule } from './restaurants/restaurants.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { AuthModule } from './auth/auth.module';
     }),
     FilesModule,
     UsersModule,
-    AuthModule
+    AuthModule,
+    RestaurantsModule
   ]
 })
 export class AppModule {}

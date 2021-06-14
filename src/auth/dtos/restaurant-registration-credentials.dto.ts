@@ -1,6 +1,6 @@
 import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator'
 
-export class UserRegistrationCredentialsDto {
+export class RestaurantRegistrationCredentialsDto {
   @IsEmail()
   email: string
 
@@ -11,9 +11,21 @@ export class UserRegistrationCredentialsDto {
 
   @IsString()
   @MinLength(1)
-  firstname: string
+  name: string
 
   @IsString()
   @MinLength(1)
-  lastname: string
+  country: string
+
+  @IsString()
+  @MinLength(1)
+  city: string
+
+  @IsString()
+  @MinLength(1)
+  address: string
+
+  @IsString()
+  @MinLength(1)
+  postalCode: string
 }
