@@ -9,10 +9,13 @@ import { PassportModule } from '@nestjs/passport'
 import { RestaurantsModule } from '../restaurants/restaurants.module'
 import { RestaurantLocalStrategy } from './strategies/restaurant-local.strategy'
 import authConfig from './config/auth.config'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { RefreshTokenRepository } from './refresh-token.repository'
 
 @Module({
   imports: [
     ConfigModule.forFeature(authConfig),
+    TypeOrmModule.forFeature([RefreshTokenRepository]),
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: process.env.APP_SECRET,

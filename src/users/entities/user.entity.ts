@@ -3,10 +3,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
 import * as bcrypt from 'bcrypt'
+import { RefreshToken } from '../../auth/entities/refresh-token.entity'
 
 @Entity()
 export class User extends BaseEntity {
@@ -33,6 +35,9 @@ export class User extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date
+
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshToken[]
 
   async validatePassword(password: string): Promise<boolean> {
     const hash = await bcrypt.hash(password, this.salt)

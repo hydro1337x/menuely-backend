@@ -14,4 +14,6 @@ export class UserAuthResponseDto {
   lastname: string
 
   accessToken: string
+
+  refreshToken: string
 }

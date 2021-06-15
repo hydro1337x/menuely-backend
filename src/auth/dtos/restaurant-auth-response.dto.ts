@@ -23,4 +23,6 @@ export class RestaurantAuthResponseDto {
   postalCode: string
 
   accessToken: string
+
+  refreshToken: string
 }

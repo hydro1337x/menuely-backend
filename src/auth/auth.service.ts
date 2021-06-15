@@ -12,6 +12,8 @@ import { RestaurantRegistrationCredentialsDto } from './dtos/restaurant-registra
 import { RestaurantAuthResponseDto } from './dtos/restaurant-auth-response.dto'
 import { ConfigType } from '@nestjs/config'
 import authConfig from './config/auth.config'
+import { InjectRepository } from '@nestjs/typeorm'
+import { RefreshTokenRepository } from './refresh-token.repository'
 
 @Injectable()
 export class AuthService {
@@ -20,7 +22,9 @@ export class AuthService {
     private restaurantService: RestaurantsService,
     private jwtService: JwtService,
     @Inject(authConfig.KEY)
-    private readonly authConfiguration: ConfigType<typeof authConfig>
+    private readonly authConfiguration: ConfigType<typeof authConfig>,
+    @InjectRepository(RefreshTokenRepository)
+    private readonly refreshTokenRepository: RefreshTokenRepository
   ) {}
 
   async registerUser(
@@ -39,11 +43,23 @@ export class AuthService {
       expiresIn: this.authConfiguration.accessTokenExpiration
     })
 
+    const refreshTokenHash = await this.jwtService.sign(payload, {
+      secret: this.authConfiguration.refreshTokenSecret,
+      expiresIn: this.authConfiguration.refreshTokenExpiration
+    })
+
+    const refreshToken =
+      await this.refreshTokenRepository.createUserRefreshToken(
+        user,
+        refreshTokenHash
+      )
+
     const userAuthResponseDto = plainToClass(UserAuthResponseDto, user, {
       excludeExtraneousValues: true
     })
 
     userAuthResponseDto.accessToken = accessToken
+    userAuthResponseDto.refreshToken = refreshToken.value
 
     return userAuthResponseDto
   }
@@ -62,10 +78,22 @@ export class AuthService {
   ): Promise<RestaurantAuthResponseDto> {
     const email = restaurant.email
     const payload: JwtPayload = { email }
+
     const accessToken = await this.jwtService.sign(payload, {
       secret: this.authConfiguration.accessTokenSecret,
       expiresIn: this.authConfiguration.accessTokenExpiration
     })
+
+    const refreshTokenHash = await this.jwtService.sign(payload, {
+      secret: this.authConfiguration.refreshTokenSecret,
+      expiresIn: this.authConfiguration.refreshTokenExpiration
+    })
+
+    const refreshToken =
+      await this.refreshTokenRepository.createRestaurantRefreshToken(
+        restaurant,
+        refreshTokenHash
+      )
 
     const restaurantAuthResponseDto = plainToClass(
       RestaurantAuthResponseDto,
@@ -76,6 +104,7 @@ export class AuthService {
     )
 
     restaurantAuthResponseDto.accessToken = accessToken
+    restaurantAuthResponseDto.refreshToken = refreshToken.value
 
     return restaurantAuthResponseDto
   }
