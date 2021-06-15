@@ -3,15 +3,18 @@ import { RefreshToken } from './entities/refresh-token.entity'
 import { InternalServerErrorException } from '@nestjs/common'
 import { User } from '../users/entities/user.entity'
 import { Restaurant } from '../restaurants/entities/restaurant.entity'
+import * as bcrypt from 'bcrypt'
 
 @EntityRepository(RefreshToken)
 export class RefreshTokenRepository extends Repository<RefreshToken> {
   async createUserRefreshToken(
     user: User,
-    value: string
-  ): Promise<RefreshToken> {
+    unhashedRefreshToken: string
+  ): Promise<void> {
     const refreshToken = new RefreshToken()
-    refreshToken.value = value
+
+    const hashedRefreshToken = await bcrypt.hash(unhashedRefreshToken, 10)
+    refreshToken.hash = hashedRefreshToken
     refreshToken.user = user
     try {
       await refreshToken.save()
@@ -21,16 +24,16 @@ export class RefreshTokenRepository extends Repository<RefreshToken> {
         'Failed creating Refresh Token'
       )
     }
-
-    return refreshToken
   }
 
   async createRestaurantRefreshToken(
     restaurant: Restaurant,
-    value: string
-  ): Promise<RefreshToken> {
+    unhashedRefreshToken: string
+  ): Promise<void> {
     const refreshToken = new RefreshToken()
-    refreshToken.value = value
+
+    const hashedRefreshToken = await bcrypt.hash(unhashedRefreshToken, 10)
+    refreshToken.hash = hashedRefreshToken
     refreshToken.restaurant = restaurant
     try {
       await refreshToken.save()
@@ -40,7 +43,5 @@ export class RefreshTokenRepository extends Repository<RefreshToken> {
         'Failed creating Refresh Token'
       )
     }
-
-    return refreshToken
   }
 }

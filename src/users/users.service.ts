@@ -12,10 +12,7 @@ export class UsersService {
   ) {}
 
   async findUser(email: string): Promise<User | undefined> {
-    return await this.usersRepository.findOne(
-      { email },
-      { relations: ['refreshTokens'] }
-    )
+    return await this.usersRepository.findUser(email)
   }
 
   async createUser(

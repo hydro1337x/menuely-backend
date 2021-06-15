@@ -30,6 +30,10 @@ export class UsersRepository extends Repository<User> {
     }
   }
 
+  async findUser(email: string): Promise<User | undefined> {
+    return await User.findOne({ email }, { relations: ['refreshTokens'] })
+  }
+
   async hashPassword(password: string, salt: string): Promise<string> {
     return await bcrypt.hash(password, salt)
   }

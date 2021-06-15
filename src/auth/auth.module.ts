@@ -11,6 +11,7 @@ import { RestaurantLocalStrategy } from './strategies/restaurant-local.strategy'
 import authConfig from './config/auth.config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { RefreshTokenRepository } from './refresh-token.repository'
+import { RefreshJwtStrategy } from './strategies/refresh-jwt.strategy'
 
 @Module({
   imports: [
@@ -29,6 +30,11 @@ import { RefreshTokenRepository } from './refresh-token.repository'
     RestaurantsModule
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserLocalStrategy, RestaurantLocalStrategy]
+  providers: [
+    AuthService,
+    UserLocalStrategy,
+    RefreshJwtStrategy,
+    RestaurantLocalStrategy
+  ]
 })
 export class AuthModule {}

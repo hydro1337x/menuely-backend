@@ -12,7 +12,7 @@ export class RestaurantsService {
   ) {}
 
   async findRestaurant(email: string): Promise<Restaurant | undefined> {
-    return await this.restaurantsRepository.findOne({ email })
+    return await this.restaurantsRepository.findRestaurant(email)
   }
 
   async createRestaurant(

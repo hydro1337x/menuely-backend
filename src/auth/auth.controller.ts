@@ -10,13 +10,14 @@ import { AuthService } from './auth.service'
 import { UserRegistrationCredentialsDto } from './dtos/user-registration-credentials.dto'
 import { UserAuthResponseDto } from './dtos/user-auth-response.dto'
 import { UserLocalAuthGuard } from './guards/user-local-auth.guard'
-import { AuthenticatedUser } from './decorators/authenticated-user.decorator'
+import { AuthenticatedEntity } from './decorators/authenticated-entity.decorator'
 import { RestaurantRegistrationCredentialsDto } from './dtos/restaurant-registration-credentials.dto'
 import { RestaurantLocalAuthGuard } from './guards/restaurant-local-auth.guard'
-import { AuthenticatedRestaurant } from './decorators/authenticated-restaurant.decorator'
 import { RestaurantAuthResponseDto } from './dtos/restaurant-auth-response.dto'
 import { User } from '../users/entities/user.entity'
 import { Restaurant } from '../restaurants/entities/restaurant.entity'
+import { TokensResponseDto } from './dtos/tokens-response.dto'
+import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard'
 
 @Controller('auth')
 export class AuthController {
@@ -33,7 +34,7 @@ export class AuthController {
   @Post('login/user')
   @HttpCode(200)
   @UseGuards(UserLocalAuthGuard)
-  loginUser(@AuthenticatedUser() user: User): Promise<UserAuthResponseDto> {
+  loginUser(@AuthenticatedEntity() user: User): Promise<UserAuthResponseDto> {
     return this.authService.loginUser(user)
   }
 
@@ -51,9 +52,14 @@ export class AuthController {
   @HttpCode(200)
   @UseGuards(RestaurantLocalAuthGuard)
   loginRestaurant(
-    @AuthenticatedRestaurant() restaurant: Restaurant
+    @AuthenticatedEntity() restaurant: Restaurant
   ): Promise<RestaurantAuthResponseDto> {
-    console.log(restaurant)
     return this.authService.loginRestaurant(restaurant)
+  }
+
+  @Post('refresh-token')
+  @UseGuards(RefreshJwtAuthGuard)
+  refreshToken(@AuthenticatedEntity() entity): Promise<TokensResponseDto> {
+    return this.authService.renewTokens(entity)
   }
 }

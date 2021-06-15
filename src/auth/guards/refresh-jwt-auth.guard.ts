@@ -3,4 +3,4 @@ import { AuthGuard } from '@nestjs/passport'
 import { StrategyType } from '../enums/strategy-type.enum'
 
 @Injectable()
-export class UserJwtAuthGuard extends AuthGuard(StrategyType.USER_JWT) {}
+export class RefreshJwtAuthGuard extends AuthGuard(StrategyType.REFRESH_JWT) {}

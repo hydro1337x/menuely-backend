@@ -33,6 +33,10 @@ export class RestaurantsRepository extends Repository<Restaurant> {
     }
   }
 
+  async findRestaurant(email: string): Promise<Restaurant | undefined> {
+    return await Restaurant.findOne({ email }, { relations: ['refreshTokens'] })
+  }
+
   async hashPassword(password: string, salt: string): Promise<string> {
     return await bcrypt.hash(password, salt)
   }

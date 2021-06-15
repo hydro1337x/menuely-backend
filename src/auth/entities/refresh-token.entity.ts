@@ -14,7 +14,7 @@ export class RefreshToken extends BaseEntity {
   id: number
 
   @Column()
-  value: string
+  hash: string
 
   @ManyToOne(() => User, (user) => user.refreshTokens)
   user: User

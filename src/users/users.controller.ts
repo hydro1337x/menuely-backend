@@ -8,8 +8,8 @@ import {
   UsePipes,
   ValidationPipe
 } from '@nestjs/common'
-import { UserJwtAuthGuard } from '../auth/guards/user-jwt-auth.guard'
-import { AuthenticatedUser } from '../auth/decorators/authenticated-user.decorator'
+import { UserAccessJwtAuthGuard } from '../auth/guards/user-access-jwt-auth.guard'
+import { AuthenticatedEntity } from '../auth/decorators/authenticated-entity.decorator'
 import { User } from './entities/user.entity'
 import { UsersService } from './users.service'
 
@@ -18,7 +18,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   // @Patch(':id/update')
-  // @UseGuards(UserJwtAuthGuard)
+  // @UseGuards(UserAccessJwtAuthGuard)
   // @UsePipes(new ValidationPipe({ whitelist: true }))
   // updateUser(
   //   @Param('id', ParseIntPipe) id: number,

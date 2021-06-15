@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common'
 import { User } from '../users/entities/user.entity'
 import { JwtService } from '@nestjs/jwt'
 import { UsersService } from '../users/users.service'
@@ -14,6 +14,8 @@ import { ConfigType } from '@nestjs/config'
 import authConfig from './config/auth.config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { RefreshTokenRepository } from './refresh-token.repository'
+import * as bcrypt from 'bcrypt'
+import { TokensResponseDto } from './dtos/tokens-response.dto'
 
 @Injectable()
 export class AuthService {
@@ -43,23 +45,19 @@ export class AuthService {
       expiresIn: this.authConfiguration.accessTokenExpiration
     })
 
-    const refreshTokenHash = await this.jwtService.sign(payload, {
+    const refreshToken = await this.jwtService.sign(payload, {
       secret: this.authConfiguration.refreshTokenSecret,
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
-    const refreshToken =
-      await this.refreshTokenRepository.createUserRefreshToken(
-        user,
-        refreshTokenHash
-      )
+    await this.refreshTokenRepository.createUserRefreshToken(user, refreshToken)
 
     const userAuthResponseDto = plainToClass(UserAuthResponseDto, user, {
       excludeExtraneousValues: true
     })
 
     userAuthResponseDto.accessToken = accessToken
-    userAuthResponseDto.refreshToken = refreshToken.value
+    userAuthResponseDto.refreshToken = refreshToken
 
     return userAuthResponseDto
   }
@@ -84,16 +82,15 @@ export class AuthService {
       expiresIn: this.authConfiguration.accessTokenExpiration
     })
 
-    const refreshTokenHash = await this.jwtService.sign(payload, {
+    const refreshToken = await this.jwtService.sign(payload, {
       secret: this.authConfiguration.refreshTokenSecret,
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
-    const refreshToken =
-      await this.refreshTokenRepository.createRestaurantRefreshToken(
-        restaurant,
-        refreshTokenHash
-      )
+    await this.refreshTokenRepository.createRestaurantRefreshToken(
+      restaurant,
+      refreshToken
+    )
 
     const restaurantAuthResponseDto = plainToClass(
       RestaurantAuthResponseDto,
@@ -104,7 +101,7 @@ export class AuthService {
     )
 
     restaurantAuthResponseDto.accessToken = accessToken
-    restaurantAuthResponseDto.refreshToken = refreshToken.value
+    restaurantAuthResponseDto.refreshToken = refreshToken
 
     return restaurantAuthResponseDto
   }
@@ -122,12 +119,126 @@ export class AuthService {
     email: string,
     password: string
   ): Promise<Restaurant> {
-    console.log(email)
     const restaurant = await this.restaurantService.findRestaurant(email)
     if (restaurant && (await restaurant.validatePassword(password))) {
       return restaurant
     } else {
       return null
+    }
+  }
+
+  async validateUserRefreshToken(
+    refreshTokenHash: string,
+    email: string
+  ): Promise<User | undefined | null> {
+    const user = await this.usersService.findUser(email)
+
+    if (!user) {
+      return null
+    }
+
+    let isValid = false
+    for (const refreshToken of user.refreshTokens) {
+      if (await bcrypt.compare(refreshTokenHash, refreshToken.hash)) {
+        isValid = true
+        break
+      }
+    }
+
+    if (isValid) {
+      return user
+    }
+  }
+
+  async validateRestaurantRefreshToken(
+    refreshTokenHash: string,
+    email: string
+  ): Promise<Restaurant | undefined | null> {
+    const restaurant = await this.restaurantService.findRestaurant(email)
+
+    if (!restaurant) {
+      return null
+    }
+
+    let isValid = false
+    for (const refreshToken of restaurant.refreshTokens) {
+      if (await bcrypt.compare(refreshTokenHash, refreshToken.hash)) {
+        isValid = true
+        break
+      }
+    }
+
+    if (isValid) {
+      return restaurant
+    }
+  }
+
+  async renewUserTokens(user: User): Promise<TokensResponseDto> {
+    const email = user.email
+    const payload: JwtPayload = { email }
+
+    const accessToken = await this.jwtService.sign(payload, {
+      secret: this.authConfiguration.accessTokenSecret,
+      expiresIn: this.authConfiguration.accessTokenExpiration
+    })
+
+    const refreshToken = await this.jwtService.sign(payload, {
+      secret: this.authConfiguration.refreshTokenSecret,
+      expiresIn: this.authConfiguration.refreshTokenExpiration
+    })
+
+    await this.refreshTokenRepository.createUserRefreshToken(user, refreshToken)
+
+    const tokensResponseDto: TokensResponseDto = {
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    }
+
+    return tokensResponseDto
+  }
+
+  async renewRestaurantTokens(
+    restaurant: Restaurant
+  ): Promise<TokensResponseDto> {
+    const email = restaurant.email
+    const payload: JwtPayload = { email }
+
+    const accessToken = await this.jwtService.sign(payload, {
+      secret: this.authConfiguration.accessTokenSecret,
+      expiresIn: this.authConfiguration.accessTokenExpiration
+    })
+
+    const refreshToken = await this.jwtService.sign(payload, {
+      secret: this.authConfiguration.refreshTokenSecret,
+      expiresIn: this.authConfiguration.refreshTokenExpiration
+    })
+
+    await this.refreshTokenRepository.createRestaurantRefreshToken(
+      restaurant,
+      refreshToken
+    )
+
+    const tokensResponseDto: TokensResponseDto = {
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    }
+
+    return tokensResponseDto
+  }
+
+  async renewTokens(entity: any): Promise<TokensResponseDto> {
+    if (!entity) {
+      throw new ForbiddenException('Entity instance not found')
+    }
+
+    if (entity instanceof User) {
+      console.log('Instance of USER')
+      return await this.renewUserTokens(entity)
+    }
+
+    if (entity instanceof Restaurant) {
+      console.log('Instance of RESTAURANT')
+      return await this.renewRestaurantTokens(entity)
     }
   }
 }
