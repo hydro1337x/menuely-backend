@@ -6,7 +6,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
   createTypeOrmOptions(
     connectionName?: string
   ): Promise<TypeOrmModuleOptions> | TypeOrmModuleOptions {
-    if (process.env.DATABASE_URL) {
+    if (process.env.NODE_ENV === 'production') {
       return {
         type: 'postgres',
         url: process.env.DATABASE_URL,

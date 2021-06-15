@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
   UnsupportedMediaTypeException
@@ -8,33 +9,28 @@ import {
 import * as AWS from 'aws-sdk'
 import { S3 } from 'aws-sdk'
 import { v4 as uuid } from 'uuid'
-import { ConfigService } from '@nestjs/config'
+import { ConfigType } from '@nestjs/config'
 import { ImageMimeType } from './enum/image-type.enum'
 import { CreateImageRequestDto } from './dto/create-image-request.dto'
 import { Image } from './entities/image.entity'
 import { ImagesRepository } from './images.repository'
 import { InjectRepository } from '@nestjs/typeorm'
+import filesConfig from './config/files.config'
 
 @Injectable()
 export class FilesService {
   private s3: S3
-  private readonly awsAccessKeyId: string
-  private readonly awsSecretAccessKey: string
-  private readonly awsBucketName: string
 
   constructor(
     @InjectRepository(ImagesRepository)
     private imagesRepository: ImagesRepository,
-    private configService: ConfigService
+    @Inject(filesConfig.KEY)
+    private readonly filesConfiguration: ConfigType<typeof filesConfig>
   ) {
     this.s3 = new AWS.S3()
-    this.awsAccessKeyId = configService.get('AWS_ACCESS_KEY_ID')
-    this.awsSecretAccessKey = configService.get('AWS_SECRET_ACCESS_KEY')
-    this.awsBucketName = configService.get('AWS_S3_BUCKET_NAME')
-
     AWS.config.update({
-      accessKeyId: this.awsAccessKeyId,
-      secretAccessKey: this.awsSecretAccessKey
+      accessKeyId: filesConfiguration.awsAccessKeyID,
+      secretAccessKey: filesConfiguration.awsSecretAccessKey
     })
   }
 
@@ -44,7 +40,7 @@ export class FilesService {
     }
 
     const params = {
-      Bucket: this.awsBucketName,
+      Bucket: this.filesConfiguration.awsS3BucketName,
       Body: file.buffer,
       Key: `${uuid()}-${file.originalname}`,
       ACL: 'public-read'
@@ -65,7 +61,7 @@ export class FilesService {
 
   async deleteRemoteImage(name: string) {
     const deletionParams = {
-      Bucket: this.awsBucketName,
+      Bucket: this.filesConfiguration.awsS3BucketName,
       Key: name
     }
 

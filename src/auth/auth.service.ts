@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { User } from '../users/entities/user.entity'
 import { JwtService } from '@nestjs/jwt'
 import { UsersService } from '../users/users.service'
@@ -10,13 +10,17 @@ import { Restaurant } from '../restaurants/entities/restaurant.entity'
 import { RestaurantsService } from '../restaurants/restaurants.service'
 import { RestaurantRegistrationCredentialsDto } from './dtos/restaurant-registration-credentials.dto'
 import { RestaurantAuthResponseDto } from './dtos/restaurant-auth-response.dto'
+import { ConfigType } from '@nestjs/config'
+import authConfig from './config/auth.config'
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private restaurantService: RestaurantsService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    @Inject(authConfig.KEY)
+    private readonly authConfiguration: ConfigType<typeof authConfig>
   ) {}
 
   async registerUser(
@@ -29,7 +33,11 @@ export class AuthService {
   async loginUser(user: User): Promise<UserAuthResponseDto> {
     const email = user.email
     const payload: JwtPayload = { email }
-    const accessToken = await this.jwtService.sign(payload)
+
+    const accessToken = await this.jwtService.sign(payload, {
+      secret: this.authConfiguration.accessTokenSecret,
+      expiresIn: this.authConfiguration.accessTokenExpiration
+    })
 
     const userAuthResponseDto = plainToClass(UserAuthResponseDto, user, {
       excludeExtraneousValues: true
@@ -54,7 +62,10 @@ export class AuthService {
   ): Promise<RestaurantAuthResponseDto> {
     const email = restaurant.email
     const payload: JwtPayload = { email }
-    const accessToken = await this.jwtService.sign(payload)
+    const accessToken = await this.jwtService.sign(payload, {
+      secret: this.authConfiguration.accessTokenSecret,
+      expiresIn: this.authConfiguration.accessTokenExpiration
+    })
 
     const restaurantAuthResponseDto = plainToClass(
       RestaurantAuthResponseDto,
