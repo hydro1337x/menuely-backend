@@ -16,6 +16,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { RefreshTokenRepository } from './refresh-token.repository'
 import * as bcrypt from 'bcrypt'
 import { TokensResponseDto } from './dtos/tokens-response.dto'
+import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
+import { RestaurantProfileResponseDto } from '../restaurants/dtos/restaurant-profile-response.dto'
 
 @Injectable()
 export class AuthService {
@@ -52,12 +54,16 @@ export class AuthService {
 
     await this.refreshTokenRepository.createUserRefreshToken(user, refreshToken)
 
-    const userAuthResponseDto = plainToClass(UserAuthResponseDto, user, {
+    const userProfileResponseDto = plainToClass(UserProfileResponseDto, user, {
       excludeExtraneousValues: true
     })
 
-    userAuthResponseDto.accessToken = accessToken
-    userAuthResponseDto.refreshToken = refreshToken
+    const tokens: TokensResponseDto = { accessToken, refreshToken }
+
+    const userAuthResponseDto: UserAuthResponseDto = {
+      user: userProfileResponseDto,
+      auth: tokens
+    }
 
     return userAuthResponseDto
   }
@@ -92,16 +98,20 @@ export class AuthService {
       refreshToken
     )
 
-    const restaurantAuthResponseDto = plainToClass(
-      RestaurantAuthResponseDto,
+    const restaurantProfileResponseDto = plainToClass(
+      RestaurantProfileResponseDto,
       restaurant,
       {
         excludeExtraneousValues: true
       }
     )
 
-    restaurantAuthResponseDto.accessToken = accessToken
-    restaurantAuthResponseDto.refreshToken = refreshToken
+    const tokens: TokensResponseDto = { accessToken, refreshToken }
+
+    const restaurantAuthResponseDto: RestaurantAuthResponseDto = {
+      restaurant: restaurantProfileResponseDto,
+      auth: tokens
+    }
 
     return restaurantAuthResponseDto
   }

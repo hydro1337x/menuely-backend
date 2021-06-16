@@ -30,6 +30,9 @@ export class User extends BaseEntity {
   @Column()
   salt: string
 
+  @Column({ nullable: true })
+  profileImageUrl: string
+
   @CreateDateColumn()
   createdAt: Date
 

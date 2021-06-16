@@ -16,6 +16,8 @@ import { Image } from './entities/image.entity'
 import { ImagesRepository } from './images.repository'
 import { InjectRepository } from '@nestjs/typeorm'
 import filesConfig from './config/files.config'
+import { plainToClass } from 'class-transformer'
+import { CreateImageResponseDto } from './dto/create-image-response.dto'
 
 @Injectable()
 export class FilesService {
@@ -34,7 +36,9 @@ export class FilesService {
     })
   }
 
-  async uploadImage(file: Express.Multer.File): Promise<Image> {
+  async uploadImage(
+    file: Express.Multer.File
+  ): Promise<CreateImageResponseDto> {
     if (!Object.values<string>(ImageMimeType).includes(file.mimetype)) {
       throw new UnsupportedMediaTypeException()
     }
@@ -56,7 +60,13 @@ export class FilesService {
     createImageDto.url = uploadResult.Location
     createImageDto.name = uploadResult.Key
 
-    return this.imagesRepository.createImage(createImageDto)
+    const image = await this.imagesRepository.createImage(createImageDto)
+
+    const imageResponseDto = plainToClass(CreateImageResponseDto, image, {
+      excludeExtraneousValues: true
+    })
+
+    return imageResponseDto
   }
 
   async deleteRemoteImage(name: string) {

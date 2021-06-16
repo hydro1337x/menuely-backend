@@ -1,28 +1,8 @@
-import { Expose } from 'class-transformer'
+import { RestaurantProfileResponseDto } from '../../restaurants/dtos/restaurant-profile-response.dto'
+import { TokensResponseDto } from './tokens-response.dto'
 
 export class RestaurantAuthResponseDto {
-  @Expose()
-  id: number
+  restaurant: RestaurantProfileResponseDto
 
-  @Expose()
-  email: string
-
-  @Expose()
-  name: string
-
-  @Expose()
-  country: string
-
-  @Expose()
-  city: string
-
-  @Expose()
-  address: string
-
-  @Expose()
-  postalCode: string
-
-  accessToken: string
-
-  refreshToken: string
+  auth: TokensResponseDto
 }
