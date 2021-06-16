@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt'
 import { UpdateUserProfileRequestDto } from './dtos/update-user-profile-request.dto'
 import { UpdateUserPasswordRequestDto } from './dtos/update-user-password-request.dto'
 import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
+import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
 
 @EntityRepository(User)
 export class UsersRepository extends Repository<User> {
@@ -56,6 +57,22 @@ export class UsersRepository extends Repository<User> {
       .getOne()
 
     return user
+  }
+
+  async findUsers(filterUserRequestDto: FilterUserRequestDto): Promise<User[]> {
+    const { search } = filterUserRequestDto
+    const query = this.createQueryBuilder('user')
+
+    if (search) {
+      query.where(
+        '(user.email LIKE :search OR user.firstname LIKE :search OR user.lastname LIKE :search)',
+        { search: `%${search}%` }
+      )
+    }
+
+    const users = await query.getMany()
+
+    return users
   }
 
   async updateUserProfile(

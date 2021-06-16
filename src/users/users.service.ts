@@ -8,6 +8,7 @@ import { UpdateUserPasswordRequestDto } from './dtos/update-user-password-reques
 import { UserProfileResponseDto } from './dtos/user-profile-response.dto'
 import { plainToClass } from 'class-transformer'
 import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
+import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
 
 @Injectable()
 export class UsersService {
@@ -34,6 +35,20 @@ export class UsersService {
     })
 
     return userProfileResponseDto
+  }
+
+  async getUsers(filterUserRequestDto: FilterUserRequestDto) {
+    const users = await this.usersRepository.findUsers(filterUserRequestDto)
+
+    const userProfileResponseDtos = plainToClass(
+      UserProfileResponseDto,
+      users,
+      {
+        excludeExtraneousValues: true
+      }
+    )
+
+    return userProfileResponseDtos
   }
 
   async createUser(

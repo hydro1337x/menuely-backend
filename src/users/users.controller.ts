@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Query,
   UseGuards,
   UsePipes,
   ValidationPipe
@@ -16,6 +17,8 @@ import { UsersService } from './users.service'
 import { UpdateUserProfileRequestDto } from './dtos/update-user-profile-request.dto'
 import { UpdateUserPasswordRequestDto } from './dtos/update-user-password-request.dto'
 import { UserProfileResponseDto } from './dtos/user-profile-response.dto'
+import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
+import { filter } from 'rxjs/operators'
 
 @Controller('users')
 export class UsersController {
@@ -34,6 +37,13 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number
   ): Promise<UserProfileResponseDto> {
     return this.usersService.getUser(id)
+  }
+
+  @Get()
+  getUsers(
+    @Query(ValidationPipe) filterUserRequestDto: FilterUserRequestDto
+  ): Promise<UserProfileResponseDto[]> {
+    return this.usersService.getUsers(filterUserRequestDto)
   }
 
   @Patch('me/update/profile')
