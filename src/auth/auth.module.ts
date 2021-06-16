@@ -13,6 +13,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { RefreshTokenRepository } from './refresh-token.repository'
 import { RefreshJwtStrategy } from './strategies/refresh-jwt.strategy'
 import { UserAccessJwtStrategy } from './strategies/user-access-jwt.strategy'
+import { RestaurantAccessJwtStrategy } from './strategies/restaurant-access-jwt.strategy'
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { UserAccessJwtStrategy } from './strategies/user-access-jwt.strategy'
     UserLocalStrategy,
     UserAccessJwtStrategy,
     RefreshJwtStrategy,
-    RestaurantLocalStrategy
+    RestaurantLocalStrategy,
+    RestaurantAccessJwtStrategy
   ]
 })
 export class AuthModule {}

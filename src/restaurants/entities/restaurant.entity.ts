@@ -36,6 +36,12 @@ export class Restaurant extends BaseEntity {
   @Column()
   postalCode: string
 
+  @Column({ nullable: true })
+  profileImageUrl: string
+
+  @Column({ nullable: true })
+  coverImageUrl: string
+
   @Column()
   passwordSalt: string
 

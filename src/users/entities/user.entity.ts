@@ -27,14 +27,14 @@ export class User extends BaseEntity {
   @Column()
   lastname: string
 
+  @Column({ nullable: true })
+  profileImageUrl: string
+
   @Column()
   passwordSalt: string
 
   @Column({ nullable: true })
   refreshTokenSalt: string
-
-  @Column({ nullable: true })
-  profileImageUrl: string
 
   @CreateDateColumn()
   createdAt: Date

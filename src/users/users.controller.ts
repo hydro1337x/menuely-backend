@@ -18,7 +18,6 @@ import { UpdateUserProfileRequestDto } from './dtos/update-user-profile-request.
 import { UpdateUserPasswordRequestDto } from './dtos/update-user-password-request.dto'
 import { UserProfileResponseDto } from './dtos/user-profile-response.dto'
 import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
-import { filter } from 'rxjs/operators'
 
 @Controller('users')
 export class UsersController {

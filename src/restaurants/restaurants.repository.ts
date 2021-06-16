@@ -3,6 +3,7 @@ import { ConflictException, InternalServerErrorException } from '@nestjs/common'
 import { Restaurant } from './entities/restaurant.entity'
 import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
 import { CreateRestaurantParams } from './interfaces/create-restaurant-params.interface'
+import { UpdateRestaurantPasswordParams } from './interfaces/update-restaurant-password-params.interface'
 
 @EntityRepository(Restaurant)
 export class RestaurantsRepository extends Repository<Restaurant> {
@@ -52,5 +53,23 @@ export class RestaurantsRepository extends Repository<Restaurant> {
       .getOne()
 
     return restaurant
+  }
+
+  async updateRestaurantPassword(
+    updateRestaurantPasswordParams: UpdateRestaurantPasswordParams
+  ): Promise<void> {
+    const { password, salt, restaurant } = updateRestaurantPasswordParams
+
+    restaurant.passwordSalt = salt
+    restaurant.password = password
+
+    try {
+      await restaurant.save()
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Failed updating new password'
+      )
+    }
   }
 }
