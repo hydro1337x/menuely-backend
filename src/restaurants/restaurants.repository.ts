@@ -1,23 +1,21 @@
 import { EntityRepository, Repository } from 'typeorm'
 import { ConflictException, InternalServerErrorException } from '@nestjs/common'
-import * as bcrypt from 'bcrypt'
 import { Restaurant } from './entities/restaurant.entity'
-import { RestaurantRegistrationCredentialsDto } from '../auth/dtos/restaurant-registration-credentials.dto'
 import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
-import { email } from '@sideway/address'
+import { CreateRestaurantParams } from './interfaces/create-restaurant-params.interface'
 
 @EntityRepository(Restaurant)
 export class RestaurantsRepository extends Repository<Restaurant> {
   async createRestaurant(
-    restaurantRegistrationCredentialsDto: RestaurantRegistrationCredentialsDto
+    createRestaurantParams: CreateRestaurantParams
   ): Promise<void> {
-    const { email, password, name, country, city, address, postalCode } =
-      restaurantRegistrationCredentialsDto
+    const { email, password, name, country, city, address, postalCode, salt } =
+      createRestaurantParams
 
     const restaurant = new Restaurant()
     restaurant.email = email
-    restaurant.salt = await bcrypt.genSalt()
-    restaurant.password = await this.hashPassword(password, restaurant.salt)
+    restaurant.salt = salt
+    restaurant.password = password
     restaurant.name = name
     restaurant.country = country
     restaurant.city = city
@@ -54,9 +52,5 @@ export class RestaurantsRepository extends Repository<Restaurant> {
       .getOne()
 
     return restaurant
-  }
-
-  async hashPassword(password: string, salt: string): Promise<string> {
-    return await bcrypt.hash(password, salt)
   }
 }

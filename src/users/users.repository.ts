@@ -1,29 +1,25 @@
 import { EntityRepository, Repository } from 'typeorm'
 import { User } from './entities/user.entity'
-import { UserRegistrationCredentialsDto } from '../auth/dtos/user-registration-credentials.dto'
 import {
   BadRequestException,
   ConflictException,
   InternalServerErrorException
 } from '@nestjs/common'
-import * as bcrypt from 'bcrypt'
 import { UpdateUserProfileRequestDto } from './dtos/update-user-profile-request.dto'
-import { UpdateUserPasswordRequestDto } from './dtos/update-user-password-request.dto'
 import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
 import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
+import { UpdateUserPasswordParams } from './interfaces/update-user-password-params.interface'
+import { CreateUserParams } from './interfaces/create-user-params.interface'
 
 @EntityRepository(User)
 export class UsersRepository extends Repository<User> {
-  async createUser(
-    userRegistrationCredentialsDto: UserRegistrationCredentialsDto
-  ): Promise<void> {
-    const { email, password, firstname, lastname } =
-      userRegistrationCredentialsDto
+  async createUser(createUserParams: CreateUserParams): Promise<void> {
+    const { email, password, firstname, lastname, salt } = createUserParams
 
     const user = new User()
     user.email = email
-    user.salt = await bcrypt.genSalt()
-    user.password = await this.hashPassword(password, user.salt)
+    user.salt = salt
+    user.password = password
     user.firstname = firstname
     user.lastname = lastname
 
@@ -31,7 +27,7 @@ export class UsersRepository extends Repository<User> {
       await user.save()
     } catch (error) {
       if (error.code == 23505) {
-        throw new ConflictException('Duplicate email')
+        throw new ConflictException(error, 'Duplicate email')
       } else {
         throw new InternalServerErrorException() // Unexpected error, case not handeled
       }
@@ -81,10 +77,6 @@ export class UsersRepository extends Repository<User> {
   ): Promise<void> {
     const { firstname, lastname, profileImageUrl } = updateUserProfileRequestDto
 
-    if (!firstname && !lastname && !profileImageUrl) {
-      throw new BadRequestException('At least one field can not be empty')
-    }
-
     if (firstname) {
       user.firstname = firstname
     }
@@ -108,24 +100,12 @@ export class UsersRepository extends Repository<User> {
   }
 
   async updateUserPassword(
-    updateUserPasswordRequestDto: UpdateUserPasswordRequestDto,
-    user: User
+    updateUserPasswordParams: UpdateUserPasswordParams
   ): Promise<void> {
-    const { oldPassword, newPassword, repeatedNewPassword } =
-      updateUserPasswordRequestDto
+    const { password, salt, user } = updateUserPasswordParams
 
-    const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password)
-
-    if (!isOldPasswordValid) {
-      throw new BadRequestException('Wrong old password')
-    }
-
-    if (newPassword !== repeatedNewPassword) {
-      throw new BadRequestException('Passwords do not match')
-    }
-
-    user.salt = await bcrypt.genSalt()
-    user.password = await this.hashPassword(newPassword, user.salt)
+    user.salt = salt
+    user.password = password
 
     try {
       await user.save()
@@ -135,9 +115,5 @@ export class UsersRepository extends Repository<User> {
         'Failed updating new password'
       )
     }
-  }
-
-  async hashPassword(password: string, salt: string): Promise<string> {
-    return await bcrypt.hash(password, salt)
   }
 }

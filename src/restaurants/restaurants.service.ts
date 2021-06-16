@@ -4,6 +4,7 @@ import { RestaurantsRepository } from './restaurants.repository'
 import { Restaurant } from './entities/restaurant.entity'
 import { RestaurantRegistrationCredentialsDto } from '../auth/dtos/restaurant-registration-credentials.dto'
 import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class RestaurantsService {
@@ -21,8 +22,20 @@ export class RestaurantsService {
   async createRestaurant(
     restaurantRegistrationCredentialsDto: RestaurantRegistrationCredentialsDto
   ): Promise<void> {
-    return await this.restaurantsRepository.createRestaurant(
-      restaurantRegistrationCredentialsDto
-    )
+    const { password, ...result } = restaurantRegistrationCredentialsDto
+
+    const salt = await bcrypt.genSalt()
+
+    const hashedPassword = await this.hashPassword(password, salt)
+
+    return await this.restaurantsRepository.createRestaurant({
+      password: hashedPassword,
+      salt,
+      ...result
+    })
+  }
+
+  async hashPassword(password: string, salt: string): Promise<string> {
+    return await bcrypt.hash(password, salt)
   }
 }

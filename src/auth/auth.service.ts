@@ -54,10 +54,10 @@ export class AuthService {
 
     const refreshTokenHash = await this.hashToken(refreshToken)
 
-    await this.refreshTokenRepository.createUserRefreshToken(
+    await this.refreshTokenRepository.createUserRefreshToken({
       user,
-      refreshTokenHash
-    )
+      hash: refreshTokenHash
+    })
 
     const userProfileResponseDto = plainToClass(UserProfileResponseDto, user, {
       excludeExtraneousValues: true
@@ -100,10 +100,10 @@ export class AuthService {
 
     const refreshTokenHash = await this.hashToken(refreshToken)
 
-    await this.refreshTokenRepository.createRestaurantRefreshToken(
+    await this.refreshTokenRepository.createRestaurantRefreshToken({
       restaurant,
-      refreshTokenHash
-    )
+      hash: refreshTokenHash
+    })
 
     const restaurantProfileResponseDto = plainToClass(
       RestaurantProfileResponseDto,
@@ -125,7 +125,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User> {
     const user = await this.usersService.findUser({ email })
-    if (user && (await user.validatePassword(password))) {
+    if (user && (await this.validatePassword(password, user))) {
       return user
     } else {
       return null
@@ -137,7 +137,7 @@ export class AuthService {
     password: string
   ): Promise<Restaurant> {
     const restaurant = await this.restaurantService.findRestaurant({ email })
-    if (restaurant && (await restaurant.validatePassword(password))) {
+    if (restaurant && (await this.validatePassword(password, restaurant))) {
       return restaurant
     } else {
       return null
@@ -210,10 +210,10 @@ export class AuthService {
 
     const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
 
-    await this.refreshTokenRepository.createUserRefreshToken(
+    await this.refreshTokenRepository.createUserRefreshToken({
       user,
-      hashedRefreshToken
-    )
+      hash: hashedRefreshToken
+    })
 
     const tokensResponseDto: TokensResponseDto = {
       accessToken: accessToken,
@@ -241,10 +241,10 @@ export class AuthService {
 
     const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
 
-    await this.refreshTokenRepository.createRestaurantRefreshToken(
-      restaurant,
-      hashedRefreshToken
-    )
+    await this.refreshTokenRepository.createRestaurantRefreshToken({
+      hash: hashedRefreshToken,
+      restaurant
+    })
 
     const tokensResponseDto: TokensResponseDto = {
       accessToken: accessToken,
@@ -272,5 +272,13 @@ export class AuthService {
 
   async hashToken(token: string): Promise<string> {
     return await bcrypt.hash(token, this.authConfiguration.refreshTokenSalt)
+  }
+
+  async validatePassword(
+    password: string,
+    entity: User | Restaurant
+  ): Promise<boolean> {
+    const hash = await bcrypt.hash(password, entity.salt)
+    return hash === entity.password
   }
 }

@@ -1,11 +1,10 @@
 import { EntityRepository, Repository } from 'typeorm'
 import { RefreshToken } from './entities/refresh-token.entity'
 import { Inject, InternalServerErrorException } from '@nestjs/common'
-import { User } from '../users/entities/user.entity'
-import { Restaurant } from '../restaurants/entities/restaurant.entity'
-import * as bcrypt from 'bcrypt'
 import authConfig from './config/auth.config'
 import { ConfigType } from '@nestjs/config'
+import { CreateRestaurantRefreshTokenParams } from './interfaces/create-restaurant-refresh-token-params.interface'
+import { CreateUserRefreshTokenParams } from './interfaces/create-user-refresh-token-params.interface'
 
 @EntityRepository(RefreshToken)
 export class RefreshTokenRepository extends Repository<RefreshToken> {
@@ -16,12 +15,12 @@ export class RefreshTokenRepository extends Repository<RefreshToken> {
     super()
   }
   async createUserRefreshToken(
-    user: User,
-    refreshTokenHash: string
+    createUserRefreshTokenParams: CreateUserRefreshTokenParams
   ): Promise<void> {
+    const { hash, user } = createUserRefreshTokenParams
     const refreshToken = new RefreshToken()
 
-    refreshToken.hash = refreshTokenHash
+    refreshToken.hash = hash
     refreshToken.user = user
 
     try {
@@ -35,12 +34,12 @@ export class RefreshTokenRepository extends Repository<RefreshToken> {
   }
 
   async createRestaurantRefreshToken(
-    restaurant: Restaurant,
-    refreshTokenHash: string
+    createRestaurantRefreshTokenParams: CreateRestaurantRefreshTokenParams
   ): Promise<void> {
+    const { hash, restaurant } = createRestaurantRefreshTokenParams
     const refreshToken = new RefreshToken()
 
-    refreshToken.hash = refreshTokenHash
+    refreshToken.hash = hash
     refreshToken.restaurant = restaurant
 
     try {

@@ -6,9 +6,11 @@ import { UserRegistrationCredentialsDto } from '../auth/dtos/user-registration-c
 import { UpdateUserProfileRequestDto } from './dtos/update-user-profile-request.dto'
 import { UpdateUserPasswordRequestDto } from './dtos/update-user-password-request.dto'
 import { UserProfileResponseDto } from './dtos/user-profile-response.dto'
-import { plainToClass } from 'class-transformer'
+import { classToPlain, plainToClass } from 'class-transformer'
 import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
 import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
+import * as bcrypt from 'bcrypt'
+import { CreateUserParams } from './interfaces/create-user-params.interface'
 
 @Injectable()
 export class UsersService {
@@ -52,15 +54,33 @@ export class UsersService {
   }
 
   async createUser(
-    registrationCredentialsDto: UserRegistrationCredentialsDto
+    userRegistrationCredentialsDto: UserRegistrationCredentialsDto
   ): Promise<void> {
-    return await this.usersRepository.createUser(registrationCredentialsDto)
+    const { password, ...result } = userRegistrationCredentialsDto
+
+    const salt = await bcrypt.genSalt()
+
+    const hashedPassword = await this.hashPassword(password, salt)
+
+    const createUserParams: CreateUserParams = {
+      password: hashedPassword,
+      salt,
+      ...result
+    }
+
+    return await this.usersRepository.createUser(createUserParams)
   }
 
   async updateUserProfile(
     updateUserProfileRequestDto: UpdateUserProfileRequestDto,
     user: User
   ): Promise<void> {
+    const { firstname, lastname, profileImageUrl } = updateUserProfileRequestDto
+
+    if (!firstname && !lastname && !profileImageUrl) {
+      throw new BadRequestException('At least one field can not be empty')
+    }
+
     return await this.usersRepository.updateUserProfile(
       updateUserProfileRequestDto,
       user
@@ -71,15 +91,37 @@ export class UsersService {
     updateUserPasswordRequestDto: UpdateUserPasswordRequestDto,
     user: User
   ): Promise<void> {
-    return await this.usersRepository.updateUserPassword(
-      updateUserPasswordRequestDto,
+    const { oldPassword, newPassword, repeatedNewPassword } =
+      updateUserPasswordRequestDto
+
+    const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password)
+
+    if (!isOldPasswordValid) {
+      throw new BadRequestException('Wrong old password')
+    }
+
+    if (newPassword !== repeatedNewPassword) {
+      throw new BadRequestException('Passwords do not match')
+    }
+
+    const salt = await bcrypt.genSalt()
+
+    const hashedPassword = await this.hashPassword(newPassword, salt)
+
+    return await this.usersRepository.updateUserPassword({
+      password: hashedPassword,
+      salt,
       user
-    )
+    })
   }
 
   formatUserProfileResponse(user: User): UserProfileResponseDto {
     return plainToClass(UserProfileResponseDto, user, {
       excludeExtraneousValues: true
     })
+  }
+
+  async hashPassword(password: string, salt: string): Promise<string> {
+    return await bcrypt.hash(password, salt)
   }
 }
