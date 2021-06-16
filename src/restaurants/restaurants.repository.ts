@@ -4,20 +4,32 @@ import { Restaurant } from './entities/restaurant.entity'
 import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
 import { CreateRestaurantParams } from './interfaces/create-restaurant-params.interface'
 import { UpdateRestaurantPasswordParams } from './interfaces/update-restaurant-password-params.interface'
+import { UpdateRestaurantProfileRequestDto } from './dtos/update-restaurant-profile-request.dto'
+import { FilterRestaurantRequestDto } from './dtos/filter-restaurant-request.dto'
 
 @EntityRepository(Restaurant)
 export class RestaurantsRepository extends Repository<Restaurant> {
   async createRestaurant(
     createRestaurantParams: CreateRestaurantParams
   ): Promise<void> {
-    const { email, password, name, country, city, address, postalCode, salt } =
-      createRestaurantParams
+    const {
+      email,
+      password,
+      name,
+      description,
+      country,
+      city,
+      address,
+      postalCode,
+      salt
+    } = createRestaurantParams
 
     const restaurant = new Restaurant()
     restaurant.email = email
     restaurant.passwordSalt = salt
     restaurant.password = password
     restaurant.name = name
+    restaurant.description = description
     restaurant.country = country
     restaurant.city = city
     restaurant.address = address
@@ -55,6 +67,81 @@ export class RestaurantsRepository extends Repository<Restaurant> {
     return restaurant
   }
 
+  async findRestaurants(
+    filterRestaurantRequestDto: FilterRestaurantRequestDto
+  ): Promise<Restaurant[]> {
+    const { search } = filterRestaurantRequestDto
+    const query = this.createQueryBuilder('restaurant')
+
+    if (search) {
+      query.where(
+        '(restaurant.name LIKE :search OR restaurant.email LIKE :search OR restaurant.country LIKE :search OR restaurant.city LIKE :search OR restaurant.address LIKE :search OR restaurant.postalCode LIKE :search)',
+        { search: `%${search}%` }
+      )
+    }
+
+    const restaurants = await query.getMany()
+
+    return restaurants
+  }
+
+  async updateRestaurantProfile(
+    updateRestaurantprofileRequestDto: UpdateRestaurantProfileRequestDto,
+    restaurant: Restaurant
+  ): Promise<void> {
+    const {
+      name,
+      description,
+      country,
+      city,
+      address,
+      postalCode,
+      profileImageUrl,
+      coverImageUrl
+    } = updateRestaurantprofileRequestDto
+
+    if (name) {
+      restaurant.name = name
+    }
+
+    if (description) {
+      restaurant.description = description
+    }
+
+    if (country) {
+      restaurant.country = country
+    }
+
+    if (city) {
+      restaurant.city = city
+    }
+
+    if (address) {
+      restaurant.address = address
+    }
+
+    if (postalCode) {
+      restaurant.postalCode = postalCode
+    }
+
+    if (profileImageUrl) {
+      restaurant.profileImageUrl = profileImageUrl
+    }
+
+    if (coverImageUrl) {
+      restaurant.coverImageUrl = coverImageUrl
+    }
+
+    try {
+      await restaurant.save()
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Failed updating restaurant profile'
+      )
+    }
+  }
+
   async updateRestaurantPassword(
     updateRestaurantPasswordParams: UpdateRestaurantPasswordParams
   ): Promise<void> {
@@ -68,7 +155,7 @@ export class RestaurantsRepository extends Repository<Restaurant> {
     } catch (error) {
       throw new InternalServerErrorException(
         error,
-        'Failed updating new password'
+        'Failed updating new restaurant password'
       )
     }
   }

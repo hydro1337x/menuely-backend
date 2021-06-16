@@ -39,7 +39,9 @@ export class UsersService {
     return userProfileResponseDto
   }
 
-  async getUsers(filterUserRequestDto: FilterUserRequestDto) {
+  async getUsers(
+    filterUserRequestDto: FilterUserRequestDto
+  ): Promise<UserProfileResponseDto[]> {
     const users = await this.usersRepository.findUsers(filterUserRequestDto)
 
     const userProfileResponseDtos = plainToClass(

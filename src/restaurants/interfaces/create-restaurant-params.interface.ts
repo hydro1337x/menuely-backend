@@ -5,6 +5,8 @@ export interface CreateRestaurantParams {
 
   name: string
 
+  description: string
+
   country: string
 
   city: string

@@ -25,6 +25,9 @@ export class Restaurant extends BaseEntity {
   name: string
 
   @Column()
+  description: string
+
+  @Column()
   country: string
 
   @Column()

@@ -7,6 +7,10 @@ export class UpdateRestaurantProfileRequestDto {
 
   @IsOptional()
   @IsNotEmpty()
+  description: string
+
+  @IsOptional()
+  @IsNotEmpty()
   country: string
 
   @IsOptional()

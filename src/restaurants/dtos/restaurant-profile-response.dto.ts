@@ -11,6 +11,9 @@ export class RestaurantProfileResponseDto {
   name: string
 
   @Expose()
+  description: string
+
+  @Expose()
   country: string
 
   @Expose()

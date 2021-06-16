@@ -112,7 +112,7 @@ export class UsersRepository extends Repository<User> {
     } catch (error) {
       throw new InternalServerErrorException(
         error,
-        'Failed updating new password'
+        'Failed updating new user password'
       )
     }
   }

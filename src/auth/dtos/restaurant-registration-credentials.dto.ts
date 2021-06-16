@@ -15,6 +15,10 @@ export class RestaurantRegistrationCredentialsDto {
 
   @IsString()
   @MinLength(1)
+  description: string
+
+  @IsString()
+  @MinLength(1)
   country: string
 
   @IsString()
