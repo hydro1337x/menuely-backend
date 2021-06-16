@@ -1,21 +1,29 @@
 import { EntityRepository, Repository } from 'typeorm'
 import { RefreshToken } from './entities/refresh-token.entity'
-import { InternalServerErrorException } from '@nestjs/common'
+import { Inject, InternalServerErrorException } from '@nestjs/common'
 import { User } from '../users/entities/user.entity'
 import { Restaurant } from '../restaurants/entities/restaurant.entity'
 import * as bcrypt from 'bcrypt'
+import authConfig from './config/auth.config'
+import { ConfigType } from '@nestjs/config'
 
 @EntityRepository(RefreshToken)
 export class RefreshTokenRepository extends Repository<RefreshToken> {
+  constructor(
+    @Inject(authConfig.KEY)
+    private readonly authConfiguration: ConfigType<typeof authConfig>
+  ) {
+    super()
+  }
   async createUserRefreshToken(
     user: User,
-    unhashedRefreshToken: string
+    refreshTokenHash: string
   ): Promise<void> {
     const refreshToken = new RefreshToken()
 
-    const hashedRefreshToken = await bcrypt.hash(unhashedRefreshToken, 10)
-    refreshToken.hash = hashedRefreshToken
+    refreshToken.hash = refreshTokenHash
     refreshToken.user = user
+
     try {
       await refreshToken.save()
     } catch (error) {
@@ -28,13 +36,13 @@ export class RefreshTokenRepository extends Repository<RefreshToken> {
 
   async createRestaurantRefreshToken(
     restaurant: Restaurant,
-    unhashedRefreshToken: string
+    refreshTokenHash: string
   ): Promise<void> {
     const refreshToken = new RefreshToken()
 
-    const hashedRefreshToken = await bcrypt.hash(unhashedRefreshToken, 10)
-    refreshToken.hash = hashedRefreshToken
+    refreshToken.hash = refreshTokenHash
     refreshToken.restaurant = restaurant
+
     try {
       await refreshToken.save()
     } catch (error) {

@@ -25,8 +25,8 @@ export class RestaurantAccessJwtStrategy extends PassportStrategy(
   }
 
   async validate(payload: JwtPayload): Promise<Restaurant> {
-    const { email } = payload
-    const restaurant = await this.restaurantsService.findRestaurant(email)
+    const { id } = payload
+    const restaurant = await this.restaurantsService.findRestaurant({ id })
 
     if (!restaurant) {
       throw new UnauthorizedException()

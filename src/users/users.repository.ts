@@ -9,6 +9,7 @@ import {
 import * as bcrypt from 'bcrypt'
 import { UpdateUserProfileRequestDto } from './dtos/update-user-profile-request.dto'
 import { UpdateUserPasswordRequestDto } from './dtos/update-user-password-request.dto'
+import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
 
 @EntityRepository(User)
 export class UsersRepository extends Repository<User> {
@@ -36,8 +37,25 @@ export class UsersRepository extends Repository<User> {
     }
   }
 
-  async findUser(email: string): Promise<User | undefined> {
-    return await User.findOne({ email }, { relations: ['refreshTokens'] })
+  async findUser(
+    searchCriteria: UniqueSearchCriteria
+  ): Promise<User | undefined> {
+    const { id, email } = searchCriteria
+    const query = this.createQueryBuilder('user')
+
+    if (id) {
+      query.where('user.id = :id', { id: id })
+    }
+
+    if (email) {
+      query.where('user.email = :email', { email: email })
+    }
+
+    const user = await query
+      .leftJoinAndSelect('user.refreshTokens', 'refreshToken')
+      .getOne()
+
+    return user
   }
 
   async updateUserProfile(
@@ -82,11 +100,11 @@ export class UsersRepository extends Repository<User> {
     const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password)
 
     if (!isOldPasswordValid) {
-      throw new BadRequestException(null, 'Wrong old password')
+      throw new BadRequestException('Wrong old password')
     }
 
     if (newPassword !== repeatedNewPassword) {
-      throw new BadRequestException(null, 'Passwords do not match')
+      throw new BadRequestException('Passwords do not match')
     }
 
     user.salt = await bcrypt.genSalt()

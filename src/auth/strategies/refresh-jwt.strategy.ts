@@ -31,16 +31,16 @@ export class RefreshJwtStrategy extends PassportStrategy(
     payload: JwtPayload
   ): Promise<User | Restaurant> {
     const { refreshToken } = request.body
-    const { email } = payload
+    const { id } = payload
 
     const user = await this.authService.validateUserRefreshToken(
       refreshToken,
-      email
+      id
     )
 
     const restaurant = await this.authService.validateRestaurantRefreshToken(
       refreshToken,
-      email
+      id
     )
 
     if (!user && !restaurant) {

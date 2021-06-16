@@ -39,8 +39,8 @@ export class AuthService {
   }
 
   async loginUser(user: User): Promise<UserAuthResponseDto> {
-    const email = user.email
-    const payload: JwtPayload = { email }
+    const id = user.id
+    const payload: JwtPayload = { id }
 
     const accessToken = await this.jwtService.sign(payload, {
       secret: this.authConfiguration.accessTokenSecret,
@@ -52,7 +52,12 @@ export class AuthService {
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
-    await this.refreshTokenRepository.createUserRefreshToken(user, refreshToken)
+    const refreshTokenHash = await this.hashToken(refreshToken)
+
+    await this.refreshTokenRepository.createUserRefreshToken(
+      user,
+      refreshTokenHash
+    )
 
     const userProfileResponseDto = plainToClass(UserProfileResponseDto, user, {
       excludeExtraneousValues: true
@@ -80,8 +85,8 @@ export class AuthService {
   async loginRestaurant(
     restaurant: Restaurant
   ): Promise<RestaurantAuthResponseDto> {
-    const email = restaurant.email
-    const payload: JwtPayload = { email }
+    const id = restaurant.id
+    const payload: JwtPayload = { id }
 
     const accessToken = await this.jwtService.sign(payload, {
       secret: this.authConfiguration.accessTokenSecret,
@@ -93,9 +98,11 @@ export class AuthService {
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
+    const refreshTokenHash = await this.hashToken(refreshToken)
+
     await this.refreshTokenRepository.createRestaurantRefreshToken(
       restaurant,
-      refreshToken
+      refreshTokenHash
     )
 
     const restaurantProfileResponseDto = plainToClass(
@@ -117,7 +124,7 @@ export class AuthService {
   }
 
   async validateUser(email: string, password: string): Promise<User> {
-    const user = await this.usersService.findUser(email)
+    const user = await this.usersService.findUser({ email })
     if (user && (await user.validatePassword(password))) {
       return user
     } else {
@@ -129,7 +136,7 @@ export class AuthService {
     email: string,
     password: string
   ): Promise<Restaurant> {
-    const restaurant = await this.restaurantService.findRestaurant(email)
+    const restaurant = await this.restaurantService.findRestaurant({ email })
     if (restaurant && (await restaurant.validatePassword(password))) {
       return restaurant
     } else {
@@ -138,18 +145,20 @@ export class AuthService {
   }
 
   async validateUserRefreshToken(
-    refreshTokenHash: string,
-    email: string
+    unhashedRefreshToken: string,
+    id: number
   ): Promise<User | undefined | null> {
-    const user = await this.usersService.findUser(email)
+    const user = await this.usersService.findUser({ id })
 
     if (!user) {
       return null
     }
 
+    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
+
     let isValid = false
     for (const refreshToken of user.refreshTokens) {
-      if (await bcrypt.compare(refreshTokenHash, refreshToken.hash)) {
+      if (hashedRefreshToken === refreshToken.hash) {
         isValid = true
         break
       }
@@ -161,18 +170,20 @@ export class AuthService {
   }
 
   async validateRestaurantRefreshToken(
-    refreshTokenHash: string,
-    email: string
+    unhashedRefreshToken: string,
+    id: number
   ): Promise<Restaurant | undefined | null> {
-    const restaurant = await this.restaurantService.findRestaurant(email)
+    const restaurant = await this.restaurantService.findRestaurant({ id })
 
     if (!restaurant) {
       return null
     }
 
+    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
+
     let isValid = false
     for (const refreshToken of restaurant.refreshTokens) {
-      if (await bcrypt.compare(refreshTokenHash, refreshToken.hash)) {
+      if (hashedRefreshToken === refreshToken.hash) {
         isValid = true
         break
       }
@@ -184,24 +195,29 @@ export class AuthService {
   }
 
   async renewUserTokens(user: User): Promise<TokensResponseDto> {
-    const email = user.email
-    const payload: JwtPayload = { email }
+    const id = user.id
+    const payload: JwtPayload = { id }
 
     const accessToken = await this.jwtService.sign(payload, {
       secret: this.authConfiguration.accessTokenSecret,
       expiresIn: this.authConfiguration.accessTokenExpiration
     })
 
-    const refreshToken = await this.jwtService.sign(payload, {
+    const unhashedRefreshToken = await this.jwtService.sign(payload, {
       secret: this.authConfiguration.refreshTokenSecret,
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
-    await this.refreshTokenRepository.createUserRefreshToken(user, refreshToken)
+    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
+
+    await this.refreshTokenRepository.createUserRefreshToken(
+      user,
+      hashedRefreshToken
+    )
 
     const tokensResponseDto: TokensResponseDto = {
       accessToken: accessToken,
-      refreshToken: refreshToken
+      refreshToken: unhashedRefreshToken
     }
 
     return tokensResponseDto
@@ -210,27 +226,29 @@ export class AuthService {
   async renewRestaurantTokens(
     restaurant: Restaurant
   ): Promise<TokensResponseDto> {
-    const email = restaurant.email
-    const payload: JwtPayload = { email }
+    const id = restaurant.id
+    const payload: JwtPayload = { id }
 
     const accessToken = await this.jwtService.sign(payload, {
       secret: this.authConfiguration.accessTokenSecret,
       expiresIn: this.authConfiguration.accessTokenExpiration
     })
 
-    const refreshToken = await this.jwtService.sign(payload, {
+    const unhashedRefreshToken = await this.jwtService.sign(payload, {
       secret: this.authConfiguration.refreshTokenSecret,
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
+    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
+
     await this.refreshTokenRepository.createRestaurantRefreshToken(
       restaurant,
-      refreshToken
+      hashedRefreshToken
     )
 
     const tokensResponseDto: TokensResponseDto = {
       accessToken: accessToken,
-      refreshToken: refreshToken
+      refreshToken: unhashedRefreshToken
     }
 
     return tokensResponseDto
@@ -250,5 +268,9 @@ export class AuthService {
       console.log('Instance of RESTAURANT')
       return await this.renewRestaurantTokens(entity)
     }
+  }
+
+  async hashToken(token: string): Promise<string> {
+    return await bcrypt.hash(token, this.authConfiguration.refreshTokenSalt)
   }
 }

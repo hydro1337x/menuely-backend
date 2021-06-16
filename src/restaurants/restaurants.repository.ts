@@ -3,6 +3,8 @@ import { ConflictException, InternalServerErrorException } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { Restaurant } from './entities/restaurant.entity'
 import { RestaurantRegistrationCredentialsDto } from '../auth/dtos/restaurant-registration-credentials.dto'
+import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
+import { email } from '@sideway/address'
 
 @EntityRepository(Restaurant)
 export class RestaurantsRepository extends Repository<Restaurant> {
@@ -33,8 +35,25 @@ export class RestaurantsRepository extends Repository<Restaurant> {
     }
   }
 
-  async findRestaurant(email: string): Promise<Restaurant | undefined> {
-    return await Restaurant.findOne({ email }, { relations: ['refreshTokens'] })
+  async findRestaurant(
+    searchCriteria: UniqueSearchCriteria
+  ): Promise<Restaurant | undefined> {
+    const { id, email } = searchCriteria
+    const query = this.createQueryBuilder('restaurant')
+
+    if (id) {
+      query.where('restaurant.id = :id', { id: id })
+    }
+
+    if (email) {
+      query.where('restaurant.email = :email', { email: email })
+    }
+
+    const restaurant = await query
+      .leftJoinAndSelect('restaurant.refreshTokens', 'refreshToken')
+      .getOne()
+
+    return restaurant
   }
 
   async hashPassword(password: string, salt: string): Promise<string> {

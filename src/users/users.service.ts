@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { User } from './entities/user.entity'
 import { UsersRepository } from './users.repository'
 import { InjectRepository } from '@nestjs/typeorm'
@@ -7,7 +7,7 @@ import { UpdateUserProfileRequestDto } from './dtos/update-user-profile-request.
 import { UpdateUserPasswordRequestDto } from './dtos/update-user-password-request.dto'
 import { UserProfileResponseDto } from './dtos/user-profile-response.dto'
 import { plainToClass } from 'class-transformer'
-import { CreateImageResponseDto } from '../files/dto/create-image-response.dto'
+import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
 
 @Injectable()
 export class UsersService {
@@ -16,8 +16,24 @@ export class UsersService {
     private usersRepository: UsersRepository
   ) {}
 
-  async findUser(email: string): Promise<User | undefined> {
-    return await this.usersRepository.findUser(email)
+  async findUser(
+    searchCriteria: UniqueSearchCriteria
+  ): Promise<User | undefined> {
+    return await this.usersRepository.findUser(searchCriteria)
+  }
+
+  async getUser(id: number): Promise<UserProfileResponseDto> {
+    const user = await this.findUser({ id })
+
+    if (!user) {
+      throw new BadRequestException('User not found')
+    }
+
+    const userProfileResponseDto = plainToClass(UserProfileResponseDto, user, {
+      excludeExtraneousValues: true
+    })
+
+    return userProfileResponseDto
   }
 
   async createUser(

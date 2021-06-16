@@ -29,6 +29,13 @@ export class UsersController {
     return this.usersService.formatUserProfileResponse(user)
   }
 
+  @Get(':id')
+  getUser(
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<UserProfileResponseDto> {
+    return this.usersService.getUser(id)
+  }
+
   @Patch('me/update/profile')
   @UseGuards(UserAccessJwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true }))
