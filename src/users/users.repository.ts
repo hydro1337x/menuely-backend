@@ -18,7 +18,7 @@ export class UsersRepository extends Repository<User> {
 
     const user = new User()
     user.email = email
-    user.salt = salt
+    user.passwordSalt = salt
     user.password = password
     user.firstname = firstname
     user.lastname = lastname
@@ -104,7 +104,7 @@ export class UsersRepository extends Repository<User> {
   ): Promise<void> {
     const { password, salt, user } = updateUserPasswordParams
 
-    user.salt = salt
+    user.passwordSalt = salt
     user.password = password
 
     try {

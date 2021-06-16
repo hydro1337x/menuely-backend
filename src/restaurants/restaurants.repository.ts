@@ -14,7 +14,7 @@ export class RestaurantsRepository extends Repository<Restaurant> {
 
     const restaurant = new Restaurant()
     restaurant.email = email
-    restaurant.salt = salt
+    restaurant.passwordSalt = salt
     restaurant.password = password
     restaurant.name = name
     restaurant.country = country

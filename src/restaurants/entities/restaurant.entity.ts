@@ -37,7 +37,10 @@ export class Restaurant extends BaseEntity {
   postalCode: string
 
   @Column()
-  salt: string
+  passwordSalt: string
+
+  @Column({ nullable: true })
+  refreshTokenSalt: string
 
   @CreateDateColumn()
   createdAt: Date

@@ -28,7 +28,10 @@ export class User extends BaseEntity {
   lastname: string
 
   @Column()
-  salt: string
+  passwordSalt: string
+
+  @Column({ nullable: true })
+  refreshTokenSalt: string
 
   @Column({ nullable: true })
   profileImageUrl: string

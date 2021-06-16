@@ -52,7 +52,12 @@ export class AuthService {
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
-    const refreshTokenHash = await this.hashToken(refreshToken)
+    const salt = await bcrypt.genSalt()
+
+    user.refreshTokenSalt = salt
+    await user.save()
+
+    const refreshTokenHash = await this.hashToken(refreshToken, salt)
 
     await this.refreshTokenRepository.createUserRefreshToken({
       user,
@@ -98,7 +103,12 @@ export class AuthService {
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
-    const refreshTokenHash = await this.hashToken(refreshToken)
+    const salt = await bcrypt.genSalt()
+
+    restaurant.refreshTokenSalt = salt
+    await restaurant.save()
+
+    const refreshTokenHash = await this.hashToken(refreshToken, salt)
 
     await this.refreshTokenRepository.createRestaurantRefreshToken({
       restaurant,
@@ -154,7 +164,10 @@ export class AuthService {
       return null
     }
 
-    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
+    const hashedRefreshToken = await this.hashToken(
+      unhashedRefreshToken,
+      user.refreshTokenSalt
+    )
 
     let isValid = false
     for (const refreshToken of user.refreshTokens) {
@@ -179,7 +192,10 @@ export class AuthService {
       return null
     }
 
-    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
+    const hashedRefreshToken = await this.hashToken(
+      unhashedRefreshToken,
+      restaurant.refreshTokenSalt
+    )
 
     let isValid = false
     for (const refreshToken of restaurant.refreshTokens) {
@@ -208,7 +224,11 @@ export class AuthService {
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
-    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
+    const salt = await bcrypt.genSalt()
+    user.refreshTokenSalt = salt
+    await user.save()
+
+    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken, salt)
 
     await this.refreshTokenRepository.createUserRefreshToken({
       user,
@@ -239,7 +259,11 @@ export class AuthService {
       expiresIn: this.authConfiguration.refreshTokenExpiration
     })
 
-    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken)
+    const salt = await bcrypt.genSalt()
+    restaurant.refreshTokenSalt = salt
+    await restaurant.save()
+
+    const hashedRefreshToken = await this.hashToken(unhashedRefreshToken, salt)
 
     await this.refreshTokenRepository.createRestaurantRefreshToken({
       hash: hashedRefreshToken,
@@ -270,15 +294,15 @@ export class AuthService {
     }
   }
 
-  async hashToken(token: string): Promise<string> {
-    return await bcrypt.hash(token, this.authConfiguration.refreshTokenSalt)
+  async hashToken(token: string, salt: string): Promise<string> {
+    return await bcrypt.hash(token, salt)
   }
 
   async validatePassword(
     password: string,
     entity: User | Restaurant
   ): Promise<boolean> {
-    const hash = await bcrypt.hash(password, entity.salt)
+    const hash = await bcrypt.hash(password, entity.passwordSalt)
     return hash === entity.password
   }
 }
