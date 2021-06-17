@@ -62,6 +62,8 @@ export class RestaurantsRepository extends Repository<Restaurant> {
 
     const restaurant = await query
       .leftJoinAndSelect('restaurant.refreshTokens', 'refreshToken')
+      .leftJoinAndSelect('restaurant.profileImage', 'profileImage')
+      .leftJoinAndSelect('restaurant.coverImage', 'coverImage')
       .getOne()
 
     return restaurant
@@ -89,16 +91,8 @@ export class RestaurantsRepository extends Repository<Restaurant> {
     updateRestaurantprofileRequestDto: UpdateRestaurantProfileRequestDto,
     restaurant: Restaurant
   ): Promise<void> {
-    const {
-      name,
-      description,
-      country,
-      city,
-      address,
-      postalCode,
-      profileImageUrl,
-      coverImageUrl
-    } = updateRestaurantprofileRequestDto
+    const { name, description, country, city, address, postalCode } =
+      updateRestaurantprofileRequestDto
 
     if (name) {
       restaurant.name = name
@@ -122,14 +116,6 @@ export class RestaurantsRepository extends Repository<Restaurant> {
 
     if (postalCode) {
       restaurant.postalCode = postalCode
-    }
-
-    if (profileImageUrl) {
-      restaurant.profileImageUrl = profileImageUrl
-    }
-
-    if (coverImageUrl) {
-      restaurant.coverImageUrl = coverImageUrl
     }
 
     try {

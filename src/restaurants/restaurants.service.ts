@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException
 } from '@nestjs/common'
@@ -14,12 +15,19 @@ import { UpdateRestaurantProfileRequestDto } from './dtos/update-restaurant-prof
 import { plainToClass } from 'class-transformer'
 import { RestaurantProfileResponseDto } from './dtos/restaurant-profile-response.dto'
 import { FilterRestaurantRequestDto } from './dtos/filter-restaurant-request.dto'
+import { UpdateRestaurantImageRequestDto } from './dtos/update-restaurant-image-request.dto'
+import { FilesService } from '../files/files.service'
+import { RestaurantImageKind } from './enums/restaurant-image-kind.enum'
+import { Image } from '../files/entities/image.entity'
+import { Connection } from 'typeorm'
 
 @Injectable()
 export class RestaurantsService {
   constructor(
     @InjectRepository(RestaurantsRepository)
-    private restaurantsRepository: RestaurantsRepository
+    private restaurantsRepository: RestaurantsRepository,
+    private filesService: FilesService,
+    private connection: Connection
   ) {}
 
   async findRestaurant(
@@ -84,27 +92,10 @@ export class RestaurantsService {
     updateRestaurantProfileRequestDto: UpdateRestaurantProfileRequestDto,
     restaurant: Restaurant
   ): Promise<void> {
-    const {
-      name,
-      description,
-      country,
-      city,
-      address,
-      postalCode,
-      profileImageUrl,
-      coverImageUrl
-    } = updateRestaurantProfileRequestDto
+    const { name, description, country, city, address, postalCode } =
+      updateRestaurantProfileRequestDto
 
-    if (
-      !name &&
-      !description &&
-      !country &&
-      !city &&
-      !address &&
-      !postalCode &&
-      !profileImageUrl &&
-      !coverImageUrl
-    ) {
+    if (!name && !description && !country && !city && !address && !postalCode) {
       throw new BadRequestException('At least one field can not be empty')
     }
 
@@ -143,6 +134,54 @@ export class RestaurantsService {
       salt,
       restaurant
     })
+  }
+
+  async updateRestaurantImage(
+    restaurant,
+    updateRestaurantImageRequestDto: UpdateRestaurantImageRequestDto,
+    file: Express.Multer.File
+  ) {
+    const { kind } = updateRestaurantImageRequestDto
+
+    const queryRunner = this.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    const imageForDeletion =
+      kind === RestaurantImageKind.PROFILE
+        ? restaurant.profileImage
+        : restaurant.coverImage
+
+    try {
+      const image = await this.filesService.uploadImage(file)
+
+      if (kind === RestaurantImageKind.PROFILE) {
+        restaurant.profileImage = image
+      }
+
+      if (kind === RestaurantImageKind.COVER) {
+        restaurant.coverImage = image
+      }
+
+      await queryRunner.manager.save(image)
+      await queryRunner.manager.save(restaurant)
+
+      if (imageForDeletion) {
+        const imageForDeletionName = imageForDeletion.name
+        await queryRunner.manager.remove(imageForDeletion)
+        await this.filesService.deleteRemoteImage(imageForDeletionName)
+      }
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+      throw new ConflictException(
+        error.message,
+        'Failed updating restaurant image'
+      )
+    } finally {
+      await queryRunner.release()
+    }
   }
 
   async deleteRestaurant(restaurant: Restaurant): Promise<void> {

@@ -3,9 +3,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
+import { Restaurant } from '../../restaurants/entities/restaurant.entity'
 
 @Entity()
 export class Image extends BaseEntity {

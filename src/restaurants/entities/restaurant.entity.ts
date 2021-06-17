@@ -3,11 +3,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
 import { RefreshToken } from '../../auth/entities/refresh-token.entity'
+import { Image } from '../../files/entities/image.entity'
 
 @Entity()
 export class Restaurant extends BaseEntity {
@@ -38,12 +41,6 @@ export class Restaurant extends BaseEntity {
   @Column()
   postalCode: string
 
-  @Column({ nullable: true })
-  profileImageUrl: string
-
-  @Column({ nullable: true })
-  coverImageUrl: string
-
   @Column()
   passwordSalt: string
 
@@ -55,6 +52,14 @@ export class Restaurant extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date
+
+  @OneToOne(() => Image, { nullable: true })
+  @JoinColumn()
+  profileImage: Image
+
+  @OneToOne(() => Image, { nullable: true })
+  @JoinColumn()
+  coverImage: Image
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.restaurant, {
     cascade: true

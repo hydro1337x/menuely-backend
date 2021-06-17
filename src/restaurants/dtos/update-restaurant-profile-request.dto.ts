@@ -24,12 +24,4 @@ export class UpdateRestaurantProfileRequestDto {
   @IsOptional()
   @IsNotEmpty()
   postalCode: string
-
-  @IsOptional()
-  @IsNotEmpty()
-  profileImageUrl: string
-
-  @IsOptional()
-  @IsNotEmpty()
-  coverImageUrl: string
 }

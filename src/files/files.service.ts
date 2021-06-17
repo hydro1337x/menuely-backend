@@ -1,16 +1,14 @@
 import {
-  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
-  NotFoundException,
   UnsupportedMediaTypeException
 } from '@nestjs/common'
 import * as AWS from 'aws-sdk'
 import { S3 } from 'aws-sdk'
 import { v4 as uuid } from 'uuid'
-import { ConfigService, ConfigType } from '@nestjs/config'
-import { ImageMimeType } from './enum/image-type.enum'
+import { ConfigType } from '@nestjs/config'
+import { ImageMimeType } from './enum/image-mime-type.enum'
 import { Image } from './entities/image.entity'
 import { ImagesRepository } from './images.repository'
 import { InjectRepository } from '@nestjs/typeorm'

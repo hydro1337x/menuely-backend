@@ -7,7 +7,9 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
   UsePipes,
   ValidationPipe
 } from '@nestjs/common'
@@ -19,8 +21,8 @@ import { RestaurantsService } from './restaurants.service'
 import { UpdateRestaurantProfileRequestDto } from './dtos/update-restaurant-profile-request.dto'
 import { FilterRestaurantRequestDto } from './dtos/filter-restaurant-request.dto'
 import { RestaurantProfileResponseDto } from './dtos/restaurant-profile-response.dto'
-import { UserAccessJwtAuthGuard } from '../auth/guards/user-access-jwt-auth.guard'
-import { User } from '../users/entities/user.entity'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { UpdateRestaurantImageRequestDto } from './dtos/update-restaurant-image-request.dto'
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -74,6 +76,22 @@ export class RestaurantsController {
     return this.restaurantsService.updateRestaurantPassword(
       updateRestaurantPasswordRequestDto,
       restaurant
+    )
+  }
+
+  @Patch('me/update/image')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  @UsePipes(ValidationPipe)
+  @UseInterceptors(FileInterceptor('image'))
+  updateRestaurantImage(
+    @AuthenticatedEntity() restaurant: Restaurant,
+    @Body() updateRestaurantImageRequestDto: UpdateRestaurantImageRequestDto,
+    @UploadedFile() file: Express.Multer.File
+  ): Promise<void> {
+    return this.restaurantsService.updateRestaurantImage(
+      restaurant,
+      updateRestaurantImageRequestDto,
+      file
     )
   }
 
