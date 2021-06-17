@@ -19,7 +19,6 @@ import { User } from '../users/entities/user.entity'
 import { Restaurant } from '../restaurants/entities/restaurant.entity'
 import { TokensResponseDto } from './dtos/tokens-response.dto'
 import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard'
-import { AccessJwtAuthGuard } from './guards/access-jwt-auth.guard'
 import { RefreshToken } from './decorators/refresh-token.decorator'
 
 @Controller('auth')

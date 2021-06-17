@@ -7,7 +7,9 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new TransformInterceptor())
 
-  await app.listen(process.env.PORT)
+  await app.listen(parseInt(process.env.PORT), () => {
+    console.log('App listening on port: ', process.env.PORT)
+  })
 }
 
 bootstrap()

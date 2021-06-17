@@ -7,6 +7,7 @@ import { FilesModule } from './files/files.module'
 import { UsersModule } from './users/users.module'
 import { AuthModule } from './auth/auth.module'
 import { RestaurantsModule } from './restaurants/restaurants.module'
+import { OrdersGateway } from './gateways/orders.gateway'
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { RestaurantsModule } from './restaurants/restaurants.module'
     UsersModule,
     AuthModule,
     RestaurantsModule
-  ]
+  ],
+  providers: [OrdersGateway]
 })
 export class AppModule {}
