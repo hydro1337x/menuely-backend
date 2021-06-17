@@ -9,15 +9,13 @@ import {
 import * as AWS from 'aws-sdk'
 import { S3 } from 'aws-sdk'
 import { v4 as uuid } from 'uuid'
-import { ConfigType } from '@nestjs/config'
+import { ConfigService, ConfigType } from '@nestjs/config'
 import { ImageMimeType } from './enum/image-type.enum'
-import { CreateImageRequestDto } from './dto/create-image-request.dto'
 import { Image } from './entities/image.entity'
 import { ImagesRepository } from './images.repository'
 import { InjectRepository } from '@nestjs/typeorm'
 import filesConfig from './config/files.config'
-import { plainToClass } from 'class-transformer'
-import { CreateImageResponseDto } from './dto/create-image-response.dto'
+import { CreateImageParams } from './interfaces/create-image-params.interface'
 
 @Injectable()
 export class FilesService {
@@ -30,15 +28,14 @@ export class FilesService {
     private readonly filesConfiguration: ConfigType<typeof filesConfig>
   ) {
     this.s3 = new AWS.S3()
+
     AWS.config.update({
-      accessKeyId: filesConfiguration.awsAccessKeyID,
-      secretAccessKey: filesConfiguration.awsSecretAccessKey
+      accessKeyId: this.filesConfiguration.awsAccessKeyID,
+      secretAccessKey: this.filesConfiguration.awsSecretAccessKey
     })
   }
 
-  async uploadImage(
-    file: Express.Multer.File
-  ): Promise<CreateImageResponseDto> {
+  async uploadImage(file: Express.Multer.File): Promise<Image> {
     if (!Object.values<string>(ImageMimeType).includes(file.mimetype)) {
       throw new UnsupportedMediaTypeException()
     }
@@ -56,17 +53,12 @@ export class FilesService {
       throw new ConflictException('File upload failed')
     }
 
-    const createImageDto = new CreateImageRequestDto()
-    createImageDto.url = uploadResult.Location
-    createImageDto.name = uploadResult.Key
+    const createImageParams: CreateImageParams = {
+      url: uploadResult.Location,
+      name: uploadResult.Key
+    }
 
-    const image = await this.imagesRepository.createImage(createImageDto)
-
-    const imageResponseDto = plainToClass(CreateImageResponseDto, image, {
-      excludeExtraneousValues: true
-    })
-
-    return imageResponseDto
+    return this.imagesRepository.createImage(createImageParams)
   }
 
   async deleteRemoteImage(name: string) {

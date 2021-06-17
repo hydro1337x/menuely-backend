@@ -1,6 +1,6 @@
 import { Expose, Transform } from 'class-transformer'
 
-export class CreateImageResponseDto {
+export class ImageResponseDto {
   @Expose()
   id: number
 
