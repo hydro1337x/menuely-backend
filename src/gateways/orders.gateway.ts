@@ -7,7 +7,6 @@ import {
   WebSocketServer
 } from '@nestjs/websockets'
 import { Socket, Server } from 'socket.io'
-import { Logger } from '@nestjs/common'
 
 @WebSocketGateway()
 export class OrdersGateway
