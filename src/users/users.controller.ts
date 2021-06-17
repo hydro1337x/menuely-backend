@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -69,5 +70,11 @@ export class UsersController {
       updateUserPasswordRequestDto,
       user
     )
+  }
+
+  @Delete('me')
+  @UseGuards(UserAccessJwtAuthGuard)
+  deleteUser(@AuthenticatedEntity() user: User): Promise<void> {
+    return this.usersService.deleteUser(user)
   }
 }

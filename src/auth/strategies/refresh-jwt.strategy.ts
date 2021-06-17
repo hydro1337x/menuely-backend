@@ -1,4 +1,4 @@
-import { ForbiddenException, Inject, Injectable, Req } from '@nestjs/common'
+import { Inject, Injectable, Req } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { StrategyType } from '../enums/strategy-type.enum'
@@ -8,6 +8,7 @@ import { User } from '../../users/entities/user.entity'
 import authConfig from '../config/auth.config'
 import { AuthService } from '../auth.service'
 import { Restaurant } from '../../restaurants/entities/restaurant.entity'
+import { log } from 'util'
 
 @Injectable()
 export class RefreshJwtStrategy extends PassportStrategy(
@@ -33,20 +34,20 @@ export class RefreshJwtStrategy extends PassportStrategy(
     const { refreshToken } = request.body
     const { id } = payload
 
-    const user = await this.authService.validateUserRefreshToken(
+    const userTokenTouple = await this.authService.validateUserRefreshToken(
       refreshToken,
       id
     )
 
-    const restaurant = await this.authService.validateRestaurantRefreshToken(
-      refreshToken,
-      id
-    )
+    const restaurantTokenTouple =
+      await this.authService.validateRestaurantRefreshToken(refreshToken, id)
 
-    if (!user && !restaurant) {
-      throw new ForbiddenException('Entity with given Refresh Token not found')
-    }
+    request.refreshToken = userTokenTouple
+      ? userTokenTouple.token
+      : restaurantTokenTouple.token
 
-    return user || restaurant
+    return userTokenTouple
+      ? userTokenTouple.entity
+      : restaurantTokenTouple.entity
   }
 }

@@ -16,9 +16,11 @@ export class RefreshToken extends BaseEntity {
   @Column()
   hash: string
 
-  @ManyToOne(() => User, (user) => user.refreshTokens)
+  @ManyToOne(() => User, (user) => user.refreshTokens, { onDelete: 'CASCADE' })
   user: User
 
-  @ManyToOne(() => Restaurant, (restaurant) => restaurant.refreshTokens)
+  @ManyToOne(() => Restaurant, (restaurant) => restaurant.refreshTokens, {
+    onDelete: 'CASCADE'
+  })
   restaurant: Restaurant
 }

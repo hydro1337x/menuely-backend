@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { RestaurantsRepository } from './restaurants.repository'
 import { Restaurant } from './entities/restaurant.entity'
@@ -139,6 +143,17 @@ export class RestaurantsService {
       salt,
       restaurant
     })
+  }
+
+  async deleteRestaurant(restaurant: Restaurant): Promise<void> {
+    try {
+      await restaurant.remove()
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Failed deleting restaurant'
+      )
+    }
   }
 
   formatRestaurantProfileResponse(

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   HttpCode,
   Post,
   UseGuards,
@@ -18,6 +19,8 @@ import { User } from '../users/entities/user.entity'
 import { Restaurant } from '../restaurants/entities/restaurant.entity'
 import { TokensResponseDto } from './dtos/tokens-response.dto'
 import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard'
+import { AccessJwtAuthGuard } from './guards/access-jwt-auth.guard'
+import { RefreshToken } from './decorators/refresh-token.decorator'
 
 @Controller('auth')
 export class AuthController {
@@ -59,7 +62,16 @@ export class AuthController {
 
   @Post('refresh-token')
   @UseGuards(RefreshJwtAuthGuard)
-  refreshToken(@AuthenticatedEntity() entity): Promise<TokensResponseDto> {
-    return this.authService.renewTokens(entity)
+  refreshToken(
+    @RefreshToken() refreshToken: string,
+    @AuthenticatedEntity() entity
+  ): Promise<TokensResponseDto> {
+    return this.authService.renewTokens(entity, refreshToken)
+  }
+
+  @Delete('logout')
+  @UseGuards(RefreshJwtAuthGuard)
+  logout(@RefreshToken() refreshToken: string): Promise<void> {
+    return this.authService.logout(refreshToken)
   }
 }

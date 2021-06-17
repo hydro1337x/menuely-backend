@@ -1,4 +1,9 @@
-import { ForbiddenException, Inject, Injectable } from '@nestjs/common'
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  InternalServerErrorException
+} from '@nestjs/common'
 import { User } from '../users/entities/user.entity'
 import { JwtService } from '@nestjs/jwt'
 import { UsersService } from '../users/users.service'
@@ -18,6 +23,7 @@ import * as bcrypt from 'bcrypt'
 import { TokensResponseDto } from './dtos/tokens-response.dto'
 import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
 import { RestaurantProfileResponseDto } from '../restaurants/dtos/restaurant-profile-response.dto'
+import { EntityTokenTuple } from './interfaces/entity-token-tuple.interface'
 
 @Injectable()
 export class AuthService {
@@ -157,7 +163,7 @@ export class AuthService {
   async validateUserRefreshToken(
     unhashedRefreshToken: string,
     id: number
-  ): Promise<User | undefined | null> {
+  ): Promise<EntityTokenTuple | undefined | null> {
     const user = await this.usersService.findUser({ id })
 
     if (!user) {
@@ -178,14 +184,14 @@ export class AuthService {
     }
 
     if (isValid) {
-      return user
+      return { entity: user, token: hashedRefreshToken }
     }
   }
 
   async validateRestaurantRefreshToken(
     unhashedRefreshToken: string,
     id: number
-  ): Promise<Restaurant | undefined | null> {
+  ): Promise<EntityTokenTuple | undefined | null> {
     const restaurant = await this.restaurantService.findRestaurant({ id })
 
     if (!restaurant) {
@@ -206,11 +212,14 @@ export class AuthService {
     }
 
     if (isValid) {
-      return restaurant
+      return { entity: restaurant, token: hashedRefreshToken }
     }
   }
 
-  async renewUserTokens(user: User): Promise<TokensResponseDto> {
+  async renewUserTokens(
+    user: User,
+    refreshToken: string
+  ): Promise<TokensResponseDto> {
     const id = user.id
     const payload: JwtPayload = { id }
 
@@ -226,7 +235,13 @@ export class AuthService {
 
     const salt = await bcrypt.genSalt()
     user.refreshTokenSalt = salt
-    await user.save()
+
+    try {
+      await user.save()
+      await this.refreshTokenRepository.delete({ hash: refreshToken })
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Renewing user tokens')
+    }
 
     const hashedRefreshToken = await this.hashToken(unhashedRefreshToken, salt)
 
@@ -244,7 +259,8 @@ export class AuthService {
   }
 
   async renewRestaurantTokens(
-    restaurant: Restaurant
+    restaurant: Restaurant,
+    refreshToken: string
   ): Promise<TokensResponseDto> {
     const id = restaurant.id
     const payload: JwtPayload = { id }
@@ -261,7 +277,16 @@ export class AuthService {
 
     const salt = await bcrypt.genSalt()
     restaurant.refreshTokenSalt = salt
-    await restaurant.save()
+
+    try {
+      await restaurant.save()
+      await this.refreshTokenRepository.delete({ hash: refreshToken })
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Renewing restaurant tokens'
+      )
+    }
 
     const hashedRefreshToken = await this.hashToken(unhashedRefreshToken, salt)
 
@@ -278,20 +303,27 @@ export class AuthService {
     return tokensResponseDto
   }
 
-  async renewTokens(entity: any): Promise<TokensResponseDto> {
+  async renewTokens(
+    entity: any,
+    refreshToken: string
+  ): Promise<TokensResponseDto> {
     if (!entity) {
       throw new ForbiddenException('Entity instance not found')
     }
 
     if (entity instanceof User) {
       console.log('Instance of USER')
-      return await this.renewUserTokens(entity)
+      return await this.renewUserTokens(entity, refreshToken)
     }
 
     if (entity instanceof Restaurant) {
       console.log('Instance of RESTAURANT')
-      return await this.renewRestaurantTokens(entity)
+      return await this.renewRestaurantTokens(entity, refreshToken)
     }
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    await this.refreshTokenRepository.delete({ hash: refreshToken })
   }
 
   async hashToken(token: string, salt: string): Promise<string> {

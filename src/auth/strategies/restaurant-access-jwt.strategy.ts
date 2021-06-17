@@ -28,10 +28,6 @@ export class RestaurantAccessJwtStrategy extends PassportStrategy(
     const { id } = payload
     const restaurant = await this.restaurantsService.findRestaurant({ id })
 
-    if (!restaurant) {
-      throw new UnauthorizedException()
-    }
-
     return restaurant
   }
 }

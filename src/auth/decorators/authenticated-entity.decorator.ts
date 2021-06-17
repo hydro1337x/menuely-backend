@@ -1,9 +1,20 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common'
+import {
+  createParamDecorator,
+  ExecutionContext,
+  NotFoundException
+} from '@nestjs/common'
 import { User } from '../../users/entities/user.entity'
 
 export const AuthenticatedEntity = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): any => {
     const request = ctx.switchToHttp().getRequest()
-    return request.user
+
+    const entity = request.user
+
+    if (!entity) {
+      throw new NotFoundException('Authenticated entity not found')
+    }
+
+    return entity
   }
 )

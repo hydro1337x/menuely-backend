@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException
+} from '@nestjs/common'
 import { User } from './entities/user.entity'
 import { UsersRepository } from './users.repository'
 import { InjectRepository } from '@nestjs/typeorm'
@@ -115,6 +119,14 @@ export class UsersService {
       salt,
       user
     })
+  }
+
+  async deleteUser(user: User): Promise<void> {
+    try {
+      await user.remove()
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Failed deleting user')
+    }
   }
 
   formatUserProfileResponse(user: User): UserProfileResponseDto {

@@ -7,7 +7,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
-import * as bcrypt from 'bcrypt'
 import { RefreshToken } from '../../auth/entities/refresh-token.entity'
 
 @Entity()
@@ -57,6 +56,8 @@ export class Restaurant extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date
 
-  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.restaurant)
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.restaurant, {
+    cascade: true
+  })
   refreshTokens: RefreshToken[]
 }

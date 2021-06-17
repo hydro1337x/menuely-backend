@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -18,6 +19,8 @@ import { RestaurantsService } from './restaurants.service'
 import { UpdateRestaurantProfileRequestDto } from './dtos/update-restaurant-profile-request.dto'
 import { FilterRestaurantRequestDto } from './dtos/filter-restaurant-request.dto'
 import { RestaurantProfileResponseDto } from './dtos/restaurant-profile-response.dto'
+import { UserAccessJwtAuthGuard } from '../auth/guards/user-access-jwt-auth.guard'
+import { User } from '../users/entities/user.entity'
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -72,5 +75,13 @@ export class RestaurantsController {
       updateRestaurantPasswordRequestDto,
       restaurant
     )
+  }
+
+  @Delete('me')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  deleteRestaurant(
+    @AuthenticatedEntity() restaurant: Restaurant
+  ): Promise<void> {
+    return this.restaurantsService.deleteRestaurant(restaurant)
   }
 }
