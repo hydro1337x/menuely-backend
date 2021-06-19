@@ -12,7 +12,7 @@ export class MailService {
     await this.mailerService.sendMail({
       to: email,
       subject: 'Menuely Support',
-      template: 'reset-password',
+      template: './reset-password',
       context: {
         name,
         password

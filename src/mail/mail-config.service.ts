@@ -3,6 +3,7 @@ import { MailerOptions, MailerOptionsFactory } from '@nestjs-modules/mailer'
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter'
 import mailConfig from '../mail/config/mail.config'
 import { ConfigType } from '@nestjs/config'
+import * as path from 'path'
 
 @Injectable()
 export class MailConfigService implements MailerOptionsFactory {
@@ -22,10 +23,10 @@ export class MailConfigService implements MailerOptionsFactory {
         }
       },
       defaults: {
-        from: '"No Reply" <noreply@example.com>'
+        from: this.mailConfiguration.mailFrom
       },
       template: {
-        dir: __dirname + '/templates',
+        dir: path.resolve(__dirname, 'templates'),
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true

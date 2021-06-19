@@ -26,13 +26,15 @@ import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
 import { RestaurantProfileResponseDto } from '../restaurants/dtos/restaurant-profile-response.dto'
 import { EntityTokenTuple } from './interfaces/entity-token-tuple.interface'
 import { ResetPasswordRequestDto } from './dtos/reset-password-request.dto'
+import { MailService } from '../mail/mail.service'
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private restaurantService: RestaurantsService,
-    private jwtService: JwtService,
+    private readonly usersService: UsersService,
+    private readonly restaurantService: RestaurantsService,
+    private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
     @Inject(authConfig.KEY)
     private readonly authConfiguration: ConfigType<typeof authConfig>,
     @InjectRepository(RefreshTokenRepository)
@@ -343,6 +345,7 @@ export class AuthService {
       salt
     )
 
+    user.passwordSalt = salt
     user.password = hashedRandomPassword
 
     try {
@@ -353,6 +356,12 @@ export class AuthService {
         'Failed saving generated password'
       )
     }
+
+    await this.mailService.sendResetPassword({
+      email: user.email,
+      name: user.firstname,
+      password: unhashedRandomPassword
+    })
   }
 
   async logout(refreshToken: string): Promise<void> {

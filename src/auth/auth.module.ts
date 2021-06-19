@@ -14,6 +14,7 @@ import { RefreshTokenRepository } from './refresh-token.repository'
 import { RefreshJwtStrategy } from './strategies/refresh-jwt.strategy'
 import { UserAccessJwtStrategy } from './strategies/user-access-jwt.strategy'
 import { RestaurantAccessJwtStrategy } from './strategies/restaurant-access-jwt.strategy'
+import { MailModule } from '../mail/mail.module'
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { RestaurantAccessJwtStrategy } from './strategies/restaurant-access-jwt.
     JwtModule.register({}),
     PassportModule,
     UsersModule,
-    RestaurantsModule
+    RestaurantsModule,
+    MailModule
   ],
   controllers: [AuthController],
   providers: [
