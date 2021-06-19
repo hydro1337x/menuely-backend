@@ -3,11 +3,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
 import { RefreshToken } from '../../auth/entities/refresh-token.entity'
+import { Image } from '../../files/entities/image.entity'
 
 @Entity()
 export class User extends BaseEntity {
@@ -26,9 +29,6 @@ export class User extends BaseEntity {
   @Column()
   lastname: string
 
-  @Column({ nullable: true })
-  profileImageUrl: string
-
   @Column()
   passwordSalt: string
 
@@ -40,6 +40,14 @@ export class User extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date
+
+  @OneToOne(() => Image, { nullable: true })
+  @JoinColumn()
+  profileImage: Image
+
+  @OneToOne(() => Image, { nullable: true })
+  @JoinColumn()
+  coverImage: Image
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user, {
     cascade: true

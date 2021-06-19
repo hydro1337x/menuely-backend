@@ -82,7 +82,10 @@ export class RestaurantsRepository extends Repository<Restaurant> {
       )
     }
 
-    const restaurants = await query.getMany()
+    const restaurants = await query
+      .leftJoinAndSelect('restaurant.profileImage', 'profileImage')
+      .leftJoinAndSelect('restaurant.coverImage', 'coverImage')
+      .getMany()
 
     return restaurants
   }

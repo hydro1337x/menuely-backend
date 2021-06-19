@@ -20,7 +20,7 @@ import { OrdersGateway } from './gateways/orders.gateway'
         ACCESS_TOKEN_SECRET: Joi.string(),
         ACCESS_TOKEN_EXPIRATION: Joi.number().default(3600),
         REFRESH_TOKEN_SECRET: Joi.string(),
-        REFRESH_TOKEN_EXPIRATION: Joi.number().default(1314000),
+        REFRESH_TOKEN_EXPIRATION: Joi.number().default(31536000),
         VERIFICATION_TOKEN_SECRET: Joi.string(),
         VERIFICATION_TOKEN_EXPIRATION: Joi.number().default(3600)
       })

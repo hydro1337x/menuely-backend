@@ -8,8 +8,4 @@ export class UpdateUserProfileRequestDto {
   @IsOptional()
   @IsNotEmpty()
   lastname: string
-
-  @IsOptional()
-  @IsNotEmpty()
-  profileImageUrl: string
 }

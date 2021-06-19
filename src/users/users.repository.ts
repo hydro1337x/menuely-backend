@@ -50,6 +50,8 @@ export class UsersRepository extends Repository<User> {
 
     const user = await query
       .leftJoinAndSelect('user.refreshTokens', 'refreshToken')
+      .leftJoinAndSelect('user.profileImage', 'profileImage')
+      .leftJoinAndSelect('user.coverImage', 'coverImage')
       .getOne()
 
     return user
@@ -66,7 +68,10 @@ export class UsersRepository extends Repository<User> {
       )
     }
 
-    const users = await query.getMany()
+    const users = await query
+      .leftJoinAndSelect('user.profileImage', 'profileImage')
+      .leftJoinAndSelect('user.coverImage', 'coverImage')
+      .getMany()
 
     return users
   }
@@ -75,7 +80,7 @@ export class UsersRepository extends Repository<User> {
     updateUserProfileRequestDto: UpdateUserProfileRequestDto,
     user: User
   ): Promise<void> {
-    const { firstname, lastname, profileImageUrl } = updateUserProfileRequestDto
+    const { firstname, lastname } = updateUserProfileRequestDto
 
     if (firstname) {
       user.firstname = firstname
@@ -83,10 +88,6 @@ export class UsersRepository extends Repository<User> {
 
     if (lastname) {
       user.lastname = lastname
-    }
-
-    if (profileImageUrl) {
-      user.profileImageUrl = profileImageUrl
     }
 
     try {

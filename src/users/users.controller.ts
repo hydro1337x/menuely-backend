@@ -7,7 +7,9 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
   UsePipes,
   ValidationPipe
 } from '@nestjs/common'
@@ -19,6 +21,8 @@ import { UpdateUserProfileRequestDto } from './dtos/update-user-profile-request.
 import { UpdateUserPasswordRequestDto } from './dtos/update-user-password-request.dto'
 import { UserProfileResponseDto } from './dtos/user-profile-response.dto'
 import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { UpdateUserImageRequestDto } from './dtos/update-user-image-request.dto'
 
 @Controller('users')
 export class UsersController {
@@ -69,6 +73,22 @@ export class UsersController {
     return this.usersService.updateUserPassword(
       updateUserPasswordRequestDto,
       user
+    )
+  }
+
+  @Patch('me/update/image')
+  @UseGuards(UserAccessJwtAuthGuard)
+  @UsePipes(ValidationPipe)
+  @UseInterceptors(FileInterceptor('image'))
+  updateUserImage(
+    @AuthenticatedEntity() user: User,
+    @Body() updateUserImageRequestDto: UpdateUserImageRequestDto,
+    @UploadedFile() file: Express.Multer.File
+  ): Promise<void> {
+    return this.usersService.updateUserImage(
+      user,
+      updateUserImageRequestDto,
+      file
     )
   }
 
