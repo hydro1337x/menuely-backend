@@ -20,10 +20,12 @@ import authConfig from './config/auth.config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { RefreshTokenRepository } from './refresh-token.repository'
 import * as bcrypt from 'bcrypt'
+import * as crypto from 'crypto'
 import { TokensResponseDto } from './dtos/tokens-response.dto'
 import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
 import { RestaurantProfileResponseDto } from '../restaurants/dtos/restaurant-profile-response.dto'
 import { EntityTokenTuple } from './interfaces/entity-token-tuple.interface'
+import { ResetPasswordRequestDto } from './dtos/reset-password-request.dto'
 
 @Injectable()
 export class AuthService {
@@ -319,6 +321,37 @@ export class AuthService {
     if (entity instanceof Restaurant) {
       console.log('Instance of RESTAURANT')
       return await this.renewRestaurantTokens(entity, refreshToken)
+    }
+  }
+
+  async resetUserPassword(
+    resetPasswordRequestDto: ResetPasswordRequestDto
+  ): Promise<void> {
+    const { email } = resetPasswordRequestDto
+
+    const user = await this.usersService.findUser({ email })
+
+    // If user with the given email does not exist just return
+    if (!user) {
+      return
+    }
+
+    const unhashedRandomPassword = crypto.randomBytes(5).toString('hex')
+    const salt = await bcrypt.genSalt()
+    const hashedRandomPassword = await this.usersService.hashPassword(
+      unhashedRandomPassword,
+      salt
+    )
+
+    user.password = hashedRandomPassword
+
+    try {
+      await user.save()
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Failed saving generated password'
+      )
     }
   }
 

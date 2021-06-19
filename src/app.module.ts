@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { TypeOrmConfigService } from './config/type-orm-config.service'
+import { TypeOrmConfigService } from './database/type-orm-config.service'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ConfigModule } from '@nestjs/config'
 import * as Joi from '@hapi/joi'
@@ -8,10 +8,17 @@ import { UsersModule } from './users/users.module'
 import { AuthModule } from './auth/auth.module'
 import { RestaurantsModule } from './restaurants/restaurants.module'
 import { OrdersGateway } from './gateways/orders.gateway'
+import { MailModule } from './mail/mail.module'
+import databaseConfig from './database/config/database.config'
+import appConfig from './config/app.config'
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
+      imports: [
+        ConfigModule.forFeature(databaseConfig), // Needed to Inject databaseConfig inside TypeOrmConfigService
+        ConfigModule.forFeature(appConfig)
+      ],
       useClass: TypeOrmConfigService
     }),
     ConfigModule.forRoot({
@@ -23,12 +30,14 @@ import { OrdersGateway } from './gateways/orders.gateway'
         REFRESH_TOKEN_EXPIRATION: Joi.number().default(31536000),
         VERIFICATION_TOKEN_SECRET: Joi.string(),
         VERIFICATION_TOKEN_EXPIRATION: Joi.number().default(3600)
-      })
+      }),
+      load: [appConfig] // Same as typing ConfigModule.forFeature, needed to Inject appConfig inside OrdersGateway provider
     }),
     FilesModule,
     UsersModule,
     AuthModule,
-    RestaurantsModule
+    RestaurantsModule,
+    MailModule
   ],
   providers: [OrdersGateway]
 })

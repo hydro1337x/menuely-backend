@@ -7,11 +7,19 @@ import {
   WebSocketServer
 } from '@nestjs/websockets'
 import { Socket, Server } from 'socket.io'
+import { Inject } from '@nestjs/common'
+import appConfig from '../config/app.config'
+import { ConfigType } from '@nestjs/config'
 
 @WebSocketGateway()
 export class OrdersGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
+  constructor(
+    @Inject(appConfig.KEY)
+    private readonly appConfiguration: ConfigType<typeof appConfig>
+  ) {}
+
   @WebSocketServer() server: Server
 
   @SubscribeMessage('msgToServer')
@@ -20,7 +28,7 @@ export class OrdersGateway
   }
 
   afterInit(server: Server) {
-    console.log('Gateway listening on port: ', process.env.PORT)
+    console.log('Gateway listening on port: ', this.appConfiguration.port)
   }
 
   handleDisconnect(client: Socket) {

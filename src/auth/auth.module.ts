@@ -19,14 +19,7 @@ import { RestaurantAccessJwtStrategy } from './strategies/restaurant-access-jwt.
   imports: [
     ConfigModule.forFeature(authConfig),
     TypeOrmModule.forFeature([RefreshTokenRepository]),
-    JwtModule.registerAsync({
-      useFactory: () => ({
-        secret: process.env.APP_SECRET,
-        signOptions: {
-          expiresIn: +process.env.ACCESS_JWT_EXPIRATION
-        }
-      })
-    }),
+    JwtModule.register({}),
     PassportModule,
     UsersModule,
     RestaurantsModule

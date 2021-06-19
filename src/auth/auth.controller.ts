@@ -20,6 +20,7 @@ import { Restaurant } from '../restaurants/entities/restaurant.entity'
 import { TokensResponseDto } from './dtos/tokens-response.dto'
 import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard'
 import { RefreshToken } from './decorators/refresh-token.decorator'
+import { ResetPasswordRequestDto } from './dtos/reset-password-request.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -66,6 +67,13 @@ export class AuthController {
     @AuthenticatedEntity() entity
   ): Promise<TokensResponseDto> {
     return this.authService.renewTokens(entity, refreshToken)
+  }
+
+  @Post('reset-password/user')
+  resetUserPassword(
+    @Body(ValidationPipe) resetPasswordRequestDto: ResetPasswordRequestDto
+  ): Promise<void> {
+    return this.authService.resetUserPassword(resetPasswordRequestDto)
   }
 
   @Delete('logout')
