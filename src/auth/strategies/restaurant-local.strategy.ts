@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException
+} from '@nestjs/common'
 import { AuthService } from '../auth.service'
 import { PassportStrategy } from '@nestjs/passport'
 import { Strategy } from 'passport-local'
@@ -19,9 +23,15 @@ export class RestaurantLocalStrategy extends PassportStrategy(
       email,
       password
     )
+
     if (!restaurant) {
       throw new UnauthorizedException()
     }
+
+    if (!restaurant.isVerified) {
+      throw new ForbiddenException('Please verify your email')
+    }
+
     return restaurant
   }
 }

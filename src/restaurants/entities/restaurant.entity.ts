@@ -41,6 +41,9 @@ export class Restaurant extends BaseEntity {
   @Column()
   postalCode: string
 
+  @Column({ default: false })
+  isVerified: boolean
+
   @Column()
   passwordSalt: string
 
