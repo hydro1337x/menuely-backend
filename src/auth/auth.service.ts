@@ -17,6 +17,7 @@ import { RestaurantRegistrationCredentialsDto } from './dtos/restaurant-registra
 import { RestaurantAuthResponseDto } from './dtos/restaurant-auth-response.dto'
 import { ConfigType } from '@nestjs/config'
 import authConfig from './config/auth.config'
+import appConfig from '../config/app.config'
 import { InjectRepository } from '@nestjs/typeorm'
 import { RefreshTokenRepository } from './refresh-token.repository'
 import * as bcrypt from 'bcrypt'
@@ -30,6 +31,9 @@ import { MailService } from '../mail/mail.service'
 
 @Injectable()
 export class AuthService {
+  userVerificationUrl: string
+  restaurantVerificationUrl: string
+
   constructor(
     private readonly usersService: UsersService,
     private readonly restaurantsService: RestaurantsService,
@@ -37,14 +41,44 @@ export class AuthService {
     private readonly mailService: MailService,
     @Inject(authConfig.KEY)
     private readonly authConfiguration: ConfigType<typeof authConfig>,
+    @Inject(appConfig.KEY)
+    private readonly appConfiguration: ConfigType<typeof appConfig>,
     @InjectRepository(RefreshTokenRepository)
     private readonly refreshTokenRepository: RefreshTokenRepository
-  ) {}
+  ) {
+    this.userVerificationUrl = appConfiguration.baseUrl + '/auth/verify/user'
+    this.restaurantVerificationUrl =
+      appConfiguration.baseUrl + '/auth/verify/restaurant'
+  }
 
   async registerUser(
     userRegistrationCredentialsDto: UserRegistrationCredentialsDto
   ): Promise<{ message: string }> {
-    await this.usersService.createUser(userRegistrationCredentialsDto)
+    const user = await this.usersService.createUser(
+      userRegistrationCredentialsDto
+    )
+
+    const { email, firstname } = userRegistrationCredentialsDto
+
+    const payload: JwtPayload = { id: user.id }
+
+    const token = this.jwtService.sign(payload, {
+      secret: this.authConfiguration.verificationTokenSecret,
+      expiresIn: this.authConfiguration.verificationTokenExpiration
+    })
+
+    const baseUrl = this.appConfiguration.baseUrl
+
+    const url = new URL(this.userVerificationUrl)
+
+    url.searchParams.append('token', token)
+
+    await this.mailService.sendVerification({
+      email,
+      name: firstname,
+      url: url.toString()
+    })
+
     return { message: 'Successfully registered' }
   }
 
@@ -94,6 +128,15 @@ export class AuthService {
     await this.restaurantsService.createRestaurant(
       restaurantRegistrationCredentialsDto
     )
+
+    const { email, name } = restaurantRegistrationCredentialsDto
+
+    await this.mailService.sendVerification({
+      email,
+      name: name,
+      url: 'fakeurl'
+    })
+
     return { message: 'Successfully registered' }
   }
 
@@ -400,6 +443,16 @@ export class AuthService {
       name: restaurant.name,
       password: unhashedRandomPassword
     })
+  }
+
+  async verifyUser(user: User): Promise<void> {
+    user.isVerified = true
+
+    try {
+      await user.save()
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Failed verifying user')
+    }
   }
 
   async logout(refreshToken: string): Promise<void> {

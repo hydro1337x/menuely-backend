@@ -68,7 +68,7 @@ export class UsersService {
 
   async createUser(
     userRegistrationCredentialsDto: UserRegistrationCredentialsDto
-  ): Promise<void> {
+  ): Promise<User> {
     const { password, ...result } = userRegistrationCredentialsDto
 
     const salt = await bcrypt.genSalt()

@@ -2,8 +2,10 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   Post,
+  Query,
   UseGuards,
   ValidationPipe
 } from '@nestjs/common'
@@ -21,6 +23,8 @@ import { TokensResponseDto } from './dtos/tokens-response.dto'
 import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard'
 import { RefreshToken } from './decorators/refresh-token.decorator'
 import { ResetPasswordRequestDto } from './dtos/reset-password-request.dto'
+import { VerifyRequestDto } from './dtos/verify-request.dto'
+import { UserVerificationAuthGuard } from './guards/user-verification-auth.guard'
 
 @Controller('auth')
 export class AuthController {
@@ -81,6 +85,15 @@ export class AuthController {
     @Body(ValidationPipe) resetPasswordRequestDto: ResetPasswordRequestDto
   ): Promise<void> {
     return this.authService.resetRestaurantPassword(resetPasswordRequestDto)
+  }
+
+  @Get('verify/user')
+  @UseGuards(UserVerificationAuthGuard)
+  verifyUser(
+    @Query(ValidationPipe) verifyRequestDto: VerifyRequestDto,
+    @AuthenticatedEntity() user: User
+  ): Promise<void> {
+    return this.authService.verifyUser(user)
   }
 
   @Delete('logout')

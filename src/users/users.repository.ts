@@ -13,7 +13,7 @@ import { CreateUserParams } from './interfaces/create-user-params.interface'
 
 @EntityRepository(User)
 export class UsersRepository extends Repository<User> {
-  async createUser(createUserParams: CreateUserParams): Promise<void> {
+  async createUser(createUserParams: CreateUserParams): Promise<User> {
     const { email, password, firstname, lastname, salt } = createUserParams
 
     const user = new User()
@@ -32,6 +32,8 @@ export class UsersRepository extends Repository<User> {
         throw new InternalServerErrorException() // Unexpected error, case not handeled
       }
     }
+
+    return user
   }
 
   async findUser(

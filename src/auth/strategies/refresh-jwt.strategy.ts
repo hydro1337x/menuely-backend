@@ -8,7 +8,6 @@ import { User } from '../../users/entities/user.entity'
 import authConfig from '../config/auth.config'
 import { AuthService } from '../auth.service'
 import { Restaurant } from '../../restaurants/entities/restaurant.entity'
-import { log } from 'util'
 
 @Injectable()
 export class RefreshJwtStrategy extends PassportStrategy(

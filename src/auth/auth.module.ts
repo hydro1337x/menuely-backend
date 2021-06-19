@@ -9,16 +9,19 @@ import { PassportModule } from '@nestjs/passport'
 import { RestaurantsModule } from '../restaurants/restaurants.module'
 import { RestaurantLocalStrategy } from './strategies/restaurant-local.strategy'
 import authConfig from './config/auth.config'
+import appConfig from '../config/app.config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { RefreshTokenRepository } from './refresh-token.repository'
 import { RefreshJwtStrategy } from './strategies/refresh-jwt.strategy'
 import { UserAccessJwtStrategy } from './strategies/user-access-jwt.strategy'
 import { RestaurantAccessJwtStrategy } from './strategies/restaurant-access-jwt.strategy'
 import { MailModule } from '../mail/mail.module'
+import { UserVerificationJwtStrategy } from './strategies/user-verification-jwt.strategy'
 
 @Module({
   imports: [
     ConfigModule.forFeature(authConfig),
+    ConfigModule.forFeature(appConfig),
     TypeOrmModule.forFeature([RefreshTokenRepository]),
     JwtModule.register({}),
     PassportModule,
@@ -31,9 +34,10 @@ import { MailModule } from '../mail/mail.module'
     AuthService,
     UserLocalStrategy,
     UserAccessJwtStrategy,
-    RefreshJwtStrategy,
+    UserVerificationJwtStrategy,
     RestaurantLocalStrategy,
-    RestaurantAccessJwtStrategy
+    RestaurantAccessJwtStrategy,
+    RefreshJwtStrategy
   ]
 })
 export class AuthModule {}
