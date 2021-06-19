@@ -32,7 +32,7 @@ import { MailService } from '../mail/mail.service'
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly restaurantService: RestaurantsService,
+    private readonly restaurantsService: RestaurantsService,
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
     @Inject(authConfig.KEY)
@@ -91,7 +91,7 @@ export class AuthService {
   async registerRestaurant(
     restaurantRegistrationCredentialsDto: RestaurantRegistrationCredentialsDto
   ): Promise<{ message: string }> {
-    await this.restaurantService.createRestaurant(
+    await this.restaurantsService.createRestaurant(
       restaurantRegistrationCredentialsDto
     )
     return { message: 'Successfully registered' }
@@ -156,7 +156,7 @@ export class AuthService {
     email: string,
     password: string
   ): Promise<Restaurant> {
-    const restaurant = await this.restaurantService.findRestaurant({ email })
+    const restaurant = await this.restaurantsService.findRestaurant({ email })
     if (restaurant && (await this.validatePassword(password, restaurant))) {
       return restaurant
     } else {
@@ -196,7 +196,7 @@ export class AuthService {
     unhashedRefreshToken: string,
     id: number
   ): Promise<EntityTokenTuple | undefined | null> {
-    const restaurant = await this.restaurantService.findRestaurant({ id })
+    const restaurant = await this.restaurantsService.findRestaurant({ id })
 
     if (!restaurant) {
       return null
@@ -360,6 +360,44 @@ export class AuthService {
     await this.mailService.sendResetPassword({
       email: user.email,
       name: user.firstname,
+      password: unhashedRandomPassword
+    })
+  }
+
+  async resetRestaurantPassword(
+    resetPasswordRequestDto: ResetPasswordRequestDto
+  ): Promise<void> {
+    const { email } = resetPasswordRequestDto
+
+    const restaurant = await this.restaurantsService.findRestaurant({ email })
+
+    // If restaurant with the given email does not exist just return
+    if (!restaurant) {
+      return
+    }
+
+    const unhashedRandomPassword = crypto.randomBytes(5).toString('hex')
+    const salt = await bcrypt.genSalt()
+    const hashedRandomPassword = await this.restaurantsService.hashPassword(
+      unhashedRandomPassword,
+      salt
+    )
+
+    restaurant.passwordSalt = salt
+    restaurant.password = hashedRandomPassword
+
+    try {
+      await restaurant.save()
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Failed saving generated password'
+      )
+    }
+
+    await this.mailService.sendResetPassword({
+      email: restaurant.email,
+      name: restaurant.name,
       password: unhashedRandomPassword
     })
   }

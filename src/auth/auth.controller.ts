@@ -76,6 +76,13 @@ export class AuthController {
     return this.authService.resetUserPassword(resetPasswordRequestDto)
   }
 
+  @Post('reset-password/restaurant')
+  resetRestaurantPassword(
+    @Body(ValidationPipe) resetPasswordRequestDto: ResetPasswordRequestDto
+  ): Promise<void> {
+    return this.authService.resetRestaurantPassword(resetPasswordRequestDto)
+  }
+
   @Delete('logout')
   @UseGuards(RefreshJwtAuthGuard)
   logout(@RefreshToken() refreshToken: string): Promise<void> {
