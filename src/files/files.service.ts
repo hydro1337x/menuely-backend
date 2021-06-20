@@ -14,6 +14,7 @@ import { ImagesRepository } from './images.repository'
 import { InjectRepository } from '@nestjs/typeorm'
 import filesConfig from './config/files.config'
 import { CreateImageParams } from './interfaces/create-image-params.interface'
+import { UploadFileParams } from './interfaces/upload-file-params.interface'
 
 @Injectable()
 export class FilesService {
@@ -33,15 +34,17 @@ export class FilesService {
     })
   }
 
-  async uploadImage(file: Express.Multer.File): Promise<Image> {
-    if (!Object.values<string>(ImageMimeType).includes(file.mimetype)) {
+  async uploadImage(uploadFileParams: UploadFileParams): Promise<Image> {
+    const { name, mime, buffer } = uploadFileParams
+
+    if (!Object.values<string>(ImageMimeType).includes(mime)) {
       throw new UnsupportedMediaTypeException()
     }
 
     const params = {
       Bucket: this.filesConfiguration.awsS3BucketName,
-      Body: file.buffer,
-      Key: `${uuid()}-${file.originalname}`,
+      Body: buffer,
+      Key: `${uuid()}-${name}`,
       ACL: 'public-read'
     }
 

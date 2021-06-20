@@ -10,6 +10,8 @@ import { RestaurantsModule } from './restaurants/restaurants.module'
 import { OrdersGateway } from './gateways/orders.gateway'
 import { MailModule } from './mail/mail.module'
 import { TokensModule } from './tokens/tokens.module';
+import { QrModule } from './qr/qr.module';
+import { MenusModule } from './menus/menus.module';
 import databaseConfig from './database/config/database.config'
 import appConfig from './config/app.config'
 
@@ -39,7 +41,9 @@ import appConfig from './config/app.config'
     AuthModule,
     RestaurantsModule,
     MailModule,
-    TokensModule
+    TokensModule,
+    QrModule,
+    MenusModule
   ],
   providers: [OrdersGateway]
 })

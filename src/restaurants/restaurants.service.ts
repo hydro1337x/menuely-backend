@@ -202,7 +202,11 @@ export class RestaurantsService {
         : restaurant.coverImage
 
     try {
-      const image = await this.filesService.uploadImage(file)
+      const image = await this.filesService.uploadImage({
+        name: file.originalname,
+        mime: file.mimetype,
+        buffer: file.buffer
+      })
 
       if (kind === RestaurantImageKind.PROFILE) {
         restaurant.profileImage = image

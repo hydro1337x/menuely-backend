@@ -190,7 +190,11 @@ export class UsersService {
       kind === UserImageKind.PROFILE ? user.profileImage : user.coverImage
 
     try {
-      const image = await this.filesService.uploadImage(file)
+      const image = await this.filesService.uploadImage({
+        name: file.originalname,
+        mime: file.mimetype,
+        buffer: file.buffer
+      })
 
       if (kind === UserImageKind.PROFILE) {
         user.profileImage = image
