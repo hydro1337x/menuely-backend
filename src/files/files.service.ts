@@ -14,7 +14,7 @@ import { ImagesRepository } from './images.repository'
 import { InjectRepository } from '@nestjs/typeorm'
 import filesConfig from './config/files.config'
 import { CreateImageParams } from './interfaces/create-image-params.interface'
-import { UploadFileParams } from './interfaces/upload-file-params.interface'
+import { ImageFileParams } from './interfaces/upload-file-params.interface'
 
 @Injectable()
 export class FilesService {
@@ -34,8 +34,8 @@ export class FilesService {
     })
   }
 
-  async uploadImage(uploadFileParams: UploadFileParams): Promise<Image> {
-    const { name, mime, buffer } = uploadFileParams
+  async uploadImage(imageFileParams: ImageFileParams): Promise<Image> {
+    const { name, mime, buffer } = imageFileParams
 
     if (!Object.values<string>(ImageMimeType).includes(mime)) {
       throw new UnsupportedMediaTypeException()

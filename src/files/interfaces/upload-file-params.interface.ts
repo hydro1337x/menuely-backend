@@ -1,4 +1,4 @@
-export interface UploadFileParams {
+export interface ImageFileParams {
   name: string
   mime: string
   buffer: Buffer
