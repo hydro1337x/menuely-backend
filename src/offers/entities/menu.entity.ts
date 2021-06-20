@@ -21,6 +21,9 @@ export class Menu extends BaseEntity {
   name: string
 
   @Column()
+  description: string
+
+  @Column()
   currency: string
 
   @CreateDateColumn()
