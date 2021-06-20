@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Injectable,
@@ -36,6 +37,10 @@ export class OffersService {
     @Body() createProductRequestDto: CreateProductRequestDto,
     @UploadedFile() file: Express.Multer.File
   ): Promise<ProductResponseDto> {
+    if (!file) {
+      throw new BadRequestException('Image file can not be empty')
+    }
+
     const { name, description, price, currency, categoryId } =
       createProductRequestDto
 

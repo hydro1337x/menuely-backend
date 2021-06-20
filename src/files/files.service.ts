@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -36,6 +37,10 @@ export class FilesService {
 
   async uploadImage(imageFileParams: ImageFileParams): Promise<Image> {
     const { name, mime, buffer } = imageFileParams
+
+    if (!name || !mime || !buffer) {
+      throw new BadRequestException('ImageFileParams can not be empty')
+    }
 
     if (!Object.values<string>(ImageMimeType).includes(mime)) {
       throw new UnsupportedMediaTypeException()
