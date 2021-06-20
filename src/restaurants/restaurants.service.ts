@@ -74,7 +74,7 @@ export class RestaurantsService {
 
   async createRestaurant(
     restaurantRegistrationCredentialsDto: RestaurantRegistrationCredentialsDto
-  ): Promise<void> {
+  ): Promise<Restaurant> {
     const { password, ...result } = restaurantRegistrationCredentialsDto
 
     const salt = await bcrypt.genSalt()

@@ -67,8 +67,6 @@ export class AuthService {
       expiresIn: this.authConfiguration.verificationTokenExpiration
     })
 
-    const baseUrl = this.appConfiguration.baseUrl
-
     const url = new URL(this.userVerificationUrl)
 
     url.searchParams.append('token', token)
@@ -125,16 +123,27 @@ export class AuthService {
   async registerRestaurant(
     restaurantRegistrationCredentialsDto: RestaurantRegistrationCredentialsDto
   ): Promise<{ message: string }> {
-    await this.restaurantsService.createRestaurant(
+    const restaurant = await this.restaurantsService.createRestaurant(
       restaurantRegistrationCredentialsDto
     )
 
     const { email, name } = restaurantRegistrationCredentialsDto
 
+    const payload: JwtPayload = { id: restaurant.id }
+
+    const token = this.jwtService.sign(payload, {
+      secret: this.authConfiguration.verificationTokenSecret,
+      expiresIn: this.authConfiguration.verificationTokenExpiration
+    })
+
+    const url = new URL(this.restaurantVerificationUrl)
+
+    url.searchParams.append('token', token)
+
     await this.mailService.sendVerification({
       email,
       name: name,
-      url: 'fakeurl'
+      url: url.toString()
     })
 
     return { message: 'Successfully registered' }
@@ -452,6 +461,19 @@ export class AuthService {
       await user.save()
     } catch (error) {
       throw new InternalServerErrorException(error, 'Failed verifying user')
+    }
+  }
+
+  async verifyRestaurant(restaurant: Restaurant): Promise<void> {
+    restaurant.isVerified = true
+
+    try {
+      await restaurant.save()
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Failed verifying restaurant'
+      )
     }
   }
 

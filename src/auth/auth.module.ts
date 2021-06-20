@@ -17,6 +17,7 @@ import { UserAccessJwtStrategy } from './strategies/user-access-jwt.strategy'
 import { RestaurantAccessJwtStrategy } from './strategies/restaurant-access-jwt.strategy'
 import { MailModule } from '../mail/mail.module'
 import { UserVerificationJwtStrategy } from './strategies/user-verification-jwt.strategy'
+import { RestaurantVerificationJwtStrategy } from './strategies/restaurant-verification-jwt.strategy'
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { UserVerificationJwtStrategy } from './strategies/user-verification-jwt.
     UserVerificationJwtStrategy,
     RestaurantLocalStrategy,
     RestaurantAccessJwtStrategy,
+    RestaurantVerificationJwtStrategy,
     RefreshJwtStrategy
   ]
 })

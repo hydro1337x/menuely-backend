@@ -11,7 +11,7 @@ import { FilterRestaurantRequestDto } from './dtos/filter-restaurant-request.dto
 export class RestaurantsRepository extends Repository<Restaurant> {
   async createRestaurant(
     createRestaurantParams: CreateRestaurantParams
-  ): Promise<void> {
+  ): Promise<Restaurant> {
     const {
       email,
       password,
@@ -44,6 +44,8 @@ export class RestaurantsRepository extends Repository<Restaurant> {
         throw new InternalServerErrorException() // Unexpected error, case not handeled
       }
     }
+
+    return restaurant
   }
 
   async findRestaurant(

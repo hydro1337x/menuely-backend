@@ -75,13 +75,11 @@ export class UsersService {
 
     const hashedPassword = await this.hashPassword(password, salt)
 
-    const createUserParams: CreateUserParams = {
+    return await this.usersRepository.createUser({
       password: hashedPassword,
       salt,
       ...result
-    }
-
-    return await this.usersRepository.createUser(createUserParams)
+    })
   }
 
   async updateUserProfile(

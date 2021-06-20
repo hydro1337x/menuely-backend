@@ -24,7 +24,8 @@ import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard'
 import { RefreshToken } from './decorators/refresh-token.decorator'
 import { ResetPasswordRequestDto } from './dtos/reset-password-request.dto'
 import { VerifyRequestDto } from './dtos/verify-request.dto'
-import { UserVerificationAuthGuard } from './guards/user-verification-auth.guard'
+import { UserVerificationJwtAuthGuard } from './guards/user-verification-jwt-auth.guard'
+import { RestaurantVerificationJwtAuthGuard } from './guards/restaurant-verification-jwt-auth.guard'
 
 @Controller('auth')
 export class AuthController {
@@ -88,12 +89,21 @@ export class AuthController {
   }
 
   @Get('verify/user')
-  @UseGuards(UserVerificationAuthGuard)
+  @UseGuards(UserVerificationJwtAuthGuard)
   verifyUser(
     @Query(ValidationPipe) verifyRequestDto: VerifyRequestDto,
     @AuthenticatedEntity() user: User
   ): Promise<void> {
     return this.authService.verifyUser(user)
+  }
+
+  @Get('verify/restaurant')
+  @UseGuards(RestaurantVerificationJwtAuthGuard)
+  verifyRestaurant(
+    @Query(ValidationPipe) verifyRequestDto: VerifyRequestDto,
+    @AuthenticatedEntity() restaurant: Restaurant
+  ): Promise<void> {
+    return this.authService.verifyRestaurant(restaurant)
   }
 
   @Delete('logout')
