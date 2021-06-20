@@ -6,6 +6,8 @@ import {
   HttpCode,
   Post,
   Query,
+  Render,
+  Res,
   UseGuards,
   ValidationPipe
 } from '@nestjs/common'
@@ -23,9 +25,9 @@ import { TokensResponseDto } from './dtos/tokens-response.dto'
 import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard'
 import { RefreshToken } from './decorators/refresh-token.decorator'
 import { ResetPasswordRequestDto } from './dtos/reset-password-request.dto'
-import { VerifyRequestDto } from './dtos/verify-request.dto'
 import { UserVerificationJwtAuthGuard } from './guards/user-verification-jwt-auth.guard'
 import { RestaurantVerificationJwtAuthGuard } from './guards/restaurant-verification-jwt-auth.guard'
+import { Response } from 'express'
 
 @Controller('auth')
 export class AuthController {
@@ -90,20 +92,26 @@ export class AuthController {
 
   @Get('verify/user')
   @UseGuards(UserVerificationJwtAuthGuard)
-  verifyUser(
-    @Query(ValidationPipe) verifyRequestDto: VerifyRequestDto,
+  async verifyUser(
+    @Res() response: Response,
     @AuthenticatedEntity() user: User
   ): Promise<void> {
-    return this.authService.verifyUser(user)
+    const verifyResponseDto = await this.authService.verifyUser(user)
+
+    return response.render('verified', verifyResponseDto)
   }
 
   @Get('verify/restaurant')
   @UseGuards(RestaurantVerificationJwtAuthGuard)
-  verifyRestaurant(
-    @Query(ValidationPipe) verifyRequestDto: VerifyRequestDto,
+  async verifyRestaurant(
+    @Res() response: Response,
     @AuthenticatedEntity() restaurant: Restaurant
-  ): Promise<void> {
-    return this.authService.verifyRestaurant(restaurant)
+  ) {
+    const verifyResponseDto = await this.authService.verifyRestaurant(
+      restaurant
+    )
+
+    return response.render('verified', verifyResponseDto)
   }
 
   @Delete('logout')

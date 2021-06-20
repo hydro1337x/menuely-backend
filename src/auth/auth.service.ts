@@ -28,6 +28,7 @@ import { RestaurantProfileResponseDto } from '../restaurants/dtos/restaurant-pro
 import { EntityTokenTuple } from './interfaces/entity-token-tuple.interface'
 import { ResetPasswordRequestDto } from './dtos/reset-password-request.dto'
 import { MailService } from '../mail/mail.service'
+import { VerifyResponseDto } from './dtos/verify-response.dto'
 
 @Injectable()
 export class AuthService {
@@ -454,7 +455,10 @@ export class AuthService {
     })
   }
 
-  async verifyUser(user: User): Promise<void> {
+  async verifyUser(user: User): Promise<VerifyResponseDto> {
+    if (user.isVerified) {
+      return { message: 'Already verified' }
+    }
     user.isVerified = true
 
     try {
@@ -462,9 +466,15 @@ export class AuthService {
     } catch (error) {
       throw new InternalServerErrorException(error, 'Failed verifying user')
     }
+
+    return { message: 'Successfully verified email' }
   }
 
-  async verifyRestaurant(restaurant: Restaurant): Promise<void> {
+  async verifyRestaurant(restaurant: Restaurant): Promise<VerifyResponseDto> {
+    if (restaurant.isVerified) {
+      return { message: 'Already verified' }
+    }
+
     restaurant.isVerified = true
 
     try {
@@ -475,6 +485,8 @@ export class AuthService {
         'Failed verifying restaurant'
       )
     }
+
+    return { message: 'Successfully verified email' }
   }
 
   async logout(refreshToken: string): Promise<void> {
