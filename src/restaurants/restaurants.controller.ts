@@ -23,6 +23,7 @@ import { FilterRestaurantRequestDto } from './dtos/filter-restaurant-request.dto
 import { RestaurantProfileResponseDto } from './dtos/restaurant-profile-response.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { UpdateRestaurantImageRequestDto } from './dtos/update-restaurant-image-request.dto'
+import { UpdateRestaurantEmailRequestDto } from './dtos/update-restaurant-email-request.dto'
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -75,6 +76,19 @@ export class RestaurantsController {
   ): Promise<void> {
     return this.restaurantsService.updateRestaurantPassword(
       updateRestaurantPasswordRequestDto,
+      restaurant
+    )
+  }
+
+  @Patch('me/update/email')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  updateRestaurantEmail(
+    @Body() updateRestaurantEmailRequestDto: UpdateRestaurantEmailRequestDto,
+    @AuthenticatedEntity() restaurant: Restaurant
+  ) {
+    return this.restaurantsService.updateRestaurantEmail(
+      updateRestaurantEmailRequestDto,
       restaurant
     )
   }

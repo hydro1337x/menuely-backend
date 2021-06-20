@@ -24,6 +24,9 @@ import { UpdateUserEmailRequestDto } from './dtos/update-user-email-request.dto'
 import { MailService } from '../mail/mail.service'
 import appConfig from '../config/app.config'
 import { ConfigType } from '@nestjs/config'
+import { TokensService } from '../tokens/tokens.service'
+import { JwtPayload } from '../tokens/interfaces/jwt-payload.interface'
+import { JwtSignType } from '../tokens/enums/jwt-sign-type.enum'
 
 @Injectable()
 export class UsersService {
@@ -32,6 +35,7 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
     private readonly filesService: FilesService,
     private readonly mailService: MailService,
+    private readonly tokensService: TokensService,
     private readonly connection: Connection,
     @Inject(appConfig.KEY)
     private readonly appConfiguration: ConfigType<typeof appConfig>
@@ -151,11 +155,18 @@ export class UsersService {
       )
     }
 
+    const payload: JwtPayload = { id: user.id }
+
+    const token = this.tokensService.signToken(
+      payload,
+      JwtSignType.VERIFICATION
+    )
+
     const base = this.appConfiguration.baseUrl
 
     const url = new URL(base + '/auth/verify/user')
 
-    // Sign token and send?
+    url.searchParams.append('token', token)
 
     await this.mailService.sendVerification({
       email,

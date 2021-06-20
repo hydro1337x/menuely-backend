@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException
 } from '@nestjs/common'
@@ -18,16 +19,26 @@ import { FilterRestaurantRequestDto } from './dtos/filter-restaurant-request.dto
 import { UpdateRestaurantImageRequestDto } from './dtos/update-restaurant-image-request.dto'
 import { FilesService } from '../files/files.service'
 import { RestaurantImageKind } from './enums/restaurant-image-kind.enum'
-import { Image } from '../files/entities/image.entity'
 import { Connection } from 'typeorm'
+import { JwtPayload } from '../tokens/interfaces/jwt-payload.interface'
+import { JwtSignType } from '../tokens/enums/jwt-sign-type.enum'
+import { UpdateRestaurantEmailRequestDto } from './dtos/update-restaurant-email-request.dto'
+import { ConfigType } from '@nestjs/config'
+import appConfig from '../config/app.config'
+import { MailService } from '../mail/mail.service'
+import { TokensService } from '../tokens/tokens.service'
 
 @Injectable()
 export class RestaurantsService {
   constructor(
     @InjectRepository(RestaurantsRepository)
-    private restaurantsRepository: RestaurantsRepository,
-    private filesService: FilesService,
-    private connection: Connection
+    private readonly restaurantsRepository: RestaurantsRepository,
+    private readonly filesService: FilesService,
+    private readonly mailService: MailService,
+    private readonly tokensService: TokensService,
+    private readonly connection: Connection,
+    @Inject(appConfig.KEY)
+    private readonly appConfiguration: ConfigType<typeof appConfig>
   ) {}
 
   async findRestaurant(
@@ -133,6 +144,44 @@ export class RestaurantsService {
       password: hashedPassword,
       salt,
       restaurant
+    })
+  }
+
+  async updateRestaurantEmail(
+    updateRestaurantEmailRequestDto: UpdateRestaurantEmailRequestDto,
+    restaurant: Restaurant
+  ) {
+    const { email } = updateRestaurantEmailRequestDto
+
+    restaurant.email = email
+    restaurant.isVerified = false
+
+    try {
+      await restaurant.save()
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Failed updating restaurant email'
+      )
+    }
+
+    const payload: JwtPayload = { id: restaurant.id }
+
+    const token = this.tokensService.signToken(
+      payload,
+      JwtSignType.VERIFICATION
+    )
+
+    const base = this.appConfiguration.baseUrl
+
+    const url = new URL(base + '/auth/verify/restaurant')
+
+    url.searchParams.append('token', token)
+
+    await this.mailService.sendVerification({
+      email,
+      name: restaurant.name,
+      url: url.toString()
     })
   }
 
