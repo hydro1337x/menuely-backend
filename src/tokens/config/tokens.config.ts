@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config'
 
-export default registerAs('auth', () => ({
+export default registerAs('tokens', () => ({
   accessTokenSecret: process.env.ACCESS_TOKEN_SECRET,
   accessTokenExpiration: parseInt(process.env.ACCESS_TOKEN_EXPIRATION),
   refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,

@@ -2,9 +2,9 @@ import { Inject, Injectable } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { StrategyType } from '../enums/strategy-type.enum'
-import authConfig from '../config/auth.config'
+import tokensConfig from '../../tokens/config/tokens.config'
 import { ConfigType } from '@nestjs/config'
-import { JwtPayload } from '../interfaces/jwt-payload.interface'
+import { JwtPayload } from '../../tokens/interfaces/jwt-payload.interface'
 import { RestaurantsService } from '../../restaurants/restaurants.service'
 import { Restaurant } from '../../restaurants/entities/restaurant.entity'
 
@@ -15,12 +15,12 @@ export class RestaurantVerificationJwtStrategy extends PassportStrategy(
 ) {
   constructor(
     private readonly restaurantsService: RestaurantsService,
-    @Inject(authConfig.KEY)
-    private readonly authConfiguration: ConfigType<typeof authConfig>
+    @Inject(tokensConfig.KEY)
+    private readonly tokensConfiguration: ConfigType<typeof tokensConfig>
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromUrlQueryParameter('token'),
-      secretOrKey: authConfiguration.verificationTokenSecret
+      secretOrKey: tokensConfiguration.verificationTokenSecret
     })
   }
 

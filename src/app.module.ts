@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module'
 import { RestaurantsModule } from './restaurants/restaurants.module'
 import { OrdersGateway } from './gateways/orders.gateway'
 import { MailModule } from './mail/mail.module'
+import { TokensModule } from './tokens/tokens.module';
 import databaseConfig from './database/config/database.config'
 import appConfig from './config/app.config'
 
@@ -37,7 +38,8 @@ import appConfig from './config/app.config'
     UsersModule,
     AuthModule,
     RestaurantsModule,
-    MailModule
+    MailModule,
+    TokensModule
   ],
   providers: [OrdersGateway]
 })

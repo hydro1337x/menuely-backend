@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   InternalServerErrorException
 } from '@nestjs/common'
@@ -15,19 +16,25 @@ import { plainToClass } from 'class-transformer'
 import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteria.interface'
 import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
 import * as bcrypt from 'bcrypt'
-import { CreateUserParams } from './interfaces/create-user-params.interface'
 import { FilesService } from '../files/files.service'
 import { Connection } from 'typeorm'
 import { UpdateUserImageRequestDto } from './dtos/update-user-image-request.dto'
 import { UserImageKind } from './enums/user-image-kind.enum'
+import { UpdateUserEmailRequestDto } from './dtos/update-user-email-request.dto'
+import { MailService } from '../mail/mail.service'
+import appConfig from '../config/app.config'
+import { ConfigType } from '@nestjs/config'
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UsersRepository)
-    private usersRepository: UsersRepository,
-    private filesService: FilesService,
-    private connection: Connection
+    private readonly usersRepository: UsersRepository,
+    private readonly filesService: FilesService,
+    private readonly mailService: MailService,
+    private readonly connection: Connection,
+    @Inject(appConfig.KEY)
+    private readonly appConfiguration: ConfigType<typeof appConfig>
   ) {}
 
   async findUser(
@@ -123,6 +130,37 @@ export class UsersService {
       password: hashedPassword,
       salt,
       user
+    })
+  }
+
+  async updateUserEmail(
+    updateUserEmailRequestDto: UpdateUserEmailRequestDto,
+    user: User
+  ) {
+    const { email } = updateUserEmailRequestDto
+
+    user.email = email
+    user.isVerified = false
+
+    try {
+      await user.save()
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Failed updating user email'
+      )
+    }
+
+    const base = this.appConfiguration.baseUrl
+
+    const url = new URL(base + '/auth/verify/user')
+
+    // Sign token and send?
+
+    await this.mailService.sendVerification({
+      email,
+      name: user.firstname,
+      url: url.toString()
     })
   }
 

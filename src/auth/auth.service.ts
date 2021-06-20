@@ -5,10 +5,9 @@ import {
   InternalServerErrorException
 } from '@nestjs/common'
 import { User } from '../users/entities/user.entity'
-import { JwtService } from '@nestjs/jwt'
 import { UsersService } from '../users/users.service'
 import { UserRegistrationCredentialsDto } from './dtos/user-registration-credentials.dto'
-import { JwtPayload } from './interfaces/jwt-payload.interface'
+import { JwtPayload } from '../tokens/interfaces/jwt-payload.interface'
 import { plainToClass } from 'class-transformer'
 import { UserAuthResponseDto } from './dtos/user-auth-response.dto'
 import { Restaurant } from '../restaurants/entities/restaurant.entity'
@@ -16,41 +15,29 @@ import { RestaurantsService } from '../restaurants/restaurants.service'
 import { RestaurantRegistrationCredentialsDto } from './dtos/restaurant-registration-credentials.dto'
 import { RestaurantAuthResponseDto } from './dtos/restaurant-auth-response.dto'
 import { ConfigType } from '@nestjs/config'
-import authConfig from './config/auth.config'
 import appConfig from '../config/app.config'
-import { InjectRepository } from '@nestjs/typeorm'
-import { RefreshTokenRepository } from './refresh-token.repository'
 import * as bcrypt from 'bcrypt'
 import * as crypto from 'crypto'
 import { TokensResponseDto } from './dtos/tokens-response.dto'
 import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
 import { RestaurantProfileResponseDto } from '../restaurants/dtos/restaurant-profile-response.dto'
-import { EntityTokenTuple } from './interfaces/entity-token-tuple.interface'
+import { EntityTokenTuple } from '../tokens/interfaces/entity-token-tuple.interface'
 import { ResetPasswordRequestDto } from './dtos/reset-password-request.dto'
 import { MailService } from '../mail/mail.service'
 import { VerifyResponseDto } from './dtos/verify-response.dto'
+import { TokensService } from '../tokens/tokens.service'
+import { JwtSignType } from '../tokens/enums/jwt-sign-type.enum'
 
 @Injectable()
 export class AuthService {
-  userVerificationUrl: string
-  restaurantVerificationUrl: string
-
   constructor(
     private readonly usersService: UsersService,
     private readonly restaurantsService: RestaurantsService,
-    private readonly jwtService: JwtService,
     private readonly mailService: MailService,
-    @Inject(authConfig.KEY)
-    private readonly authConfiguration: ConfigType<typeof authConfig>,
+    private readonly tokensService: TokensService,
     @Inject(appConfig.KEY)
-    private readonly appConfiguration: ConfigType<typeof appConfig>,
-    @InjectRepository(RefreshTokenRepository)
-    private readonly refreshTokenRepository: RefreshTokenRepository
-  ) {
-    this.userVerificationUrl = appConfiguration.baseUrl + '/auth/verify/user'
-    this.restaurantVerificationUrl =
-      appConfiguration.baseUrl + '/auth/verify/restaurant'
-  }
+    private readonly appConfiguration: ConfigType<typeof appConfig>
+  ) {}
 
   async registerUser(
     userRegistrationCredentialsDto: UserRegistrationCredentialsDto
@@ -63,12 +50,14 @@ export class AuthService {
 
     const payload: JwtPayload = { id: user.id }
 
-    const token = this.jwtService.sign(payload, {
-      secret: this.authConfiguration.verificationTokenSecret,
-      expiresIn: this.authConfiguration.verificationTokenExpiration
-    })
+    const token = this.tokensService.signToken(
+      payload,
+      JwtSignType.VERIFICATION
+    )
 
-    const url = new URL(this.userVerificationUrl)
+    const base = this.appConfiguration.baseUrl
+
+    const url = new URL(base + '/auth/verify/user')
 
     url.searchParams.append('token', token)
 
@@ -85,15 +74,15 @@ export class AuthService {
     const id = user.id
     const payload: JwtPayload = { id }
 
-    const accessToken = await this.jwtService.sign(payload, {
-      secret: this.authConfiguration.accessTokenSecret,
-      expiresIn: this.authConfiguration.accessTokenExpiration
-    })
+    const accessToken = this.tokensService.signToken(
+      payload,
+      JwtSignType.ACCESS
+    )
 
-    const refreshToken = await this.jwtService.sign(payload, {
-      secret: this.authConfiguration.refreshTokenSecret,
-      expiresIn: this.authConfiguration.refreshTokenExpiration
-    })
+    const refreshToken = this.tokensService.signToken(
+      payload,
+      JwtSignType.REFRESH
+    )
 
     const salt = await bcrypt.genSalt()
 
@@ -102,7 +91,7 @@ export class AuthService {
 
     const refreshTokenHash = await this.hashToken(refreshToken, salt)
 
-    await this.refreshTokenRepository.createUserRefreshToken({
+    await this.tokensService.createUserRefreshToken({
       user,
       hash: refreshTokenHash
     })
@@ -132,12 +121,14 @@ export class AuthService {
 
     const payload: JwtPayload = { id: restaurant.id }
 
-    const token = this.jwtService.sign(payload, {
-      secret: this.authConfiguration.verificationTokenSecret,
-      expiresIn: this.authConfiguration.verificationTokenExpiration
-    })
+    const token = this.tokensService.signToken(
+      payload,
+      JwtSignType.VERIFICATION
+    )
 
-    const url = new URL(this.restaurantVerificationUrl)
+    const base = this.appConfiguration.baseUrl
+
+    const url = new URL(base + '/auth/verify/restaurant')
 
     url.searchParams.append('token', token)
 
@@ -156,15 +147,15 @@ export class AuthService {
     const id = restaurant.id
     const payload: JwtPayload = { id }
 
-    const accessToken = await this.jwtService.sign(payload, {
-      secret: this.authConfiguration.accessTokenSecret,
-      expiresIn: this.authConfiguration.accessTokenExpiration
-    })
+    const accessToken = await this.tokensService.signToken(
+      payload,
+      JwtSignType.ACCESS
+    )
 
-    const refreshToken = await this.jwtService.sign(payload, {
-      secret: this.authConfiguration.refreshTokenSecret,
-      expiresIn: this.authConfiguration.refreshTokenExpiration
-    })
+    const refreshToken = await this.tokensService.signToken(
+      payload,
+      JwtSignType.REFRESH
+    )
 
     const salt = await bcrypt.genSalt()
 
@@ -173,7 +164,7 @@ export class AuthService {
 
     const refreshTokenHash = await this.hashToken(refreshToken, salt)
 
-    await this.refreshTokenRepository.createRestaurantRefreshToken({
+    await this.tokensService.createRestaurantRefreshToken({
       restaurant,
       hash: refreshTokenHash
     })
@@ -280,29 +271,29 @@ export class AuthService {
     const id = user.id
     const payload: JwtPayload = { id }
 
-    const accessToken = await this.jwtService.sign(payload, {
-      secret: this.authConfiguration.accessTokenSecret,
-      expiresIn: this.authConfiguration.accessTokenExpiration
-    })
+    const accessToken = this.tokensService.signToken(
+      payload,
+      JwtSignType.ACCESS
+    )
 
-    const unhashedRefreshToken = await this.jwtService.sign(payload, {
-      secret: this.authConfiguration.refreshTokenSecret,
-      expiresIn: this.authConfiguration.refreshTokenExpiration
-    })
+    const unhashedRefreshToken = await this.tokensService.signToken(
+      payload,
+      JwtSignType.REFRESH
+    )
 
     const salt = await bcrypt.genSalt()
     user.refreshTokenSalt = salt
 
     try {
       await user.save()
-      await this.refreshTokenRepository.delete({ hash: refreshToken })
+      await this.tokensService.deleteRefreshToken(refreshToken)
     } catch (error) {
       throw new InternalServerErrorException(error, 'Renewing user tokens')
     }
 
     const hashedRefreshToken = await this.hashToken(unhashedRefreshToken, salt)
 
-    await this.refreshTokenRepository.createUserRefreshToken({
+    await this.tokensService.createUserRefreshToken({
       user,
       hash: hashedRefreshToken
     })
@@ -322,22 +313,22 @@ export class AuthService {
     const id = restaurant.id
     const payload: JwtPayload = { id }
 
-    const accessToken = await this.jwtService.sign(payload, {
-      secret: this.authConfiguration.accessTokenSecret,
-      expiresIn: this.authConfiguration.accessTokenExpiration
-    })
+    const accessToken = this.tokensService.signToken(
+      payload,
+      JwtSignType.ACCESS
+    )
 
-    const unhashedRefreshToken = await this.jwtService.sign(payload, {
-      secret: this.authConfiguration.refreshTokenSecret,
-      expiresIn: this.authConfiguration.refreshTokenExpiration
-    })
+    const unhashedRefreshToken = await this.tokensService.signToken(
+      payload,
+      JwtSignType.REFRESH
+    )
 
     const salt = await bcrypt.genSalt()
     restaurant.refreshTokenSalt = salt
 
     try {
       await restaurant.save()
-      await this.refreshTokenRepository.delete({ hash: refreshToken })
+      await this.tokensService.deleteRefreshToken(refreshToken)
     } catch (error) {
       throw new InternalServerErrorException(
         error,
@@ -347,7 +338,7 @@ export class AuthService {
 
     const hashedRefreshToken = await this.hashToken(unhashedRefreshToken, salt)
 
-    await this.refreshTokenRepository.createRestaurantRefreshToken({
+    await this.tokensService.createRestaurantRefreshToken({
       hash: hashedRefreshToken,
       restaurant
     })
@@ -490,7 +481,7 @@ export class AuthService {
   }
 
   async logout(refreshToken: string): Promise<void> {
-    await this.refreshTokenRepository.delete({ hash: refreshToken })
+    await this.tokensService.deleteRefreshToken(refreshToken)
   }
 
   async hashToken(token: string, salt: string): Promise<string> {

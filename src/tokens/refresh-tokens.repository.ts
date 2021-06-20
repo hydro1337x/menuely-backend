@@ -1,16 +1,16 @@
 import { EntityRepository, Repository } from 'typeorm'
-import { RefreshToken } from './entities/refresh-token.entity'
+import { RefreshToken } from '../auth/entities/refresh-token.entity'
 import { Inject, InternalServerErrorException } from '@nestjs/common'
-import authConfig from './config/auth.config'
+import tokensConfig from './config/tokens.config'
 import { ConfigType } from '@nestjs/config'
-import { CreateRestaurantRefreshTokenParams } from './interfaces/create-restaurant-refresh-token-params.interface'
 import { CreateUserRefreshTokenParams } from './interfaces/create-user-refresh-token-params.interface'
+import { CreateRestaurantRefreshTokenParams } from './interfaces/create-restaurant-refresh-token-params.interface'
 
 @EntityRepository(RefreshToken)
-export class RefreshTokenRepository extends Repository<RefreshToken> {
+export class RefreshTokensRepository extends Repository<RefreshToken> {
   constructor(
-    @Inject(authConfig.KEY)
-    private readonly authConfiguration: ConfigType<typeof authConfig>
+    @Inject(tokensConfig.KEY)
+    private readonly tokensConfiguration: ConfigType<typeof tokensConfig>
   ) {
     super()
   }

@@ -2,11 +2,11 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { PassportStrategy } from '@nestjs/passport'
 import { ConfigType } from '@nestjs/config'
-import { JwtPayload } from '../interfaces/jwt-payload.interface'
+import { JwtPayload } from '../../tokens/interfaces/jwt-payload.interface'
 import { StrategyType } from '../enums/strategy-type.enum'
 import { RestaurantsService } from '../../restaurants/restaurants.service'
 import { Restaurant } from '../../restaurants/entities/restaurant.entity'
-import authConfig from '../config/auth.config'
+import tokensConfig from '../../tokens/config/tokens.config'
 
 @Injectable()
 export class RestaurantAccessJwtStrategy extends PassportStrategy(
@@ -15,12 +15,12 @@ export class RestaurantAccessJwtStrategy extends PassportStrategy(
 ) {
   constructor(
     private restaurantsService: RestaurantsService,
-    @Inject(authConfig.KEY)
-    private readonly authConfiguration: ConfigType<typeof authConfig>
+    @Inject(tokensConfig.KEY)
+    private readonly tokensConfiguration: ConfigType<typeof tokensConfig>
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: authConfiguration.accessTokenSecret
+      secretOrKey: tokensConfiguration.accessTokenSecret
     })
   }
 

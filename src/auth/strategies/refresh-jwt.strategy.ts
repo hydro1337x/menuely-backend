@@ -3,9 +3,9 @@ import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { StrategyType } from '../enums/strategy-type.enum'
 import { ConfigType } from '@nestjs/config'
-import { JwtPayload } from '../interfaces/jwt-payload.interface'
+import { JwtPayload } from '../../tokens/interfaces/jwt-payload.interface'
 import { User } from '../../users/entities/user.entity'
-import authConfig from '../config/auth.config'
+import tokensConfig from '../../tokens/config/tokens.config'
 import { AuthService } from '../auth.service'
 import { Restaurant } from '../../restaurants/entities/restaurant.entity'
 
@@ -16,12 +16,12 @@ export class RefreshJwtStrategy extends PassportStrategy(
 ) {
   constructor(
     private authService: AuthService,
-    @Inject(authConfig.KEY)
-    private readonly authConfiguration: ConfigType<typeof authConfig>
+    @Inject(tokensConfig.KEY)
+    private readonly tokensConfiguration: ConfigType<typeof tokensConfig>
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
-      secretOrKey: authConfiguration.refreshTokenSecret,
+      secretOrKey: tokensConfiguration.refreshTokenSecret,
       passReqToCallback: true
     })
   }

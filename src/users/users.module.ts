@@ -4,9 +4,17 @@ import { UsersService } from './users.service'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { UsersRepository } from './users.repository'
 import { FilesModule } from '../files/files.module'
+import { ConfigModule } from '@nestjs/config'
+import appConfig from '../config/app.config'
+import { MailModule } from '../mail/mail.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UsersRepository]), FilesModule],
+  imports: [
+    TypeOrmModule.forFeature([UsersRepository]),
+    ConfigModule.forFeature(appConfig),
+    FilesModule,
+    MailModule
+  ],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService]

@@ -23,6 +23,7 @@ import { UserProfileResponseDto } from './dtos/user-profile-response.dto'
 import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { UpdateUserImageRequestDto } from './dtos/update-user-image-request.dto'
+import { UpdateUserEmailRequestDto } from './dtos/update-user-email-request.dto'
 
 @Controller('users')
 export class UsersController {
@@ -74,6 +75,16 @@ export class UsersController {
       updateUserPasswordRequestDto,
       user
     )
+  }
+
+  @Patch('me/update/email')
+  @UseGuards(UserAccessJwtAuthGuard)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  updateUserEmail(
+    @Body() updateUserEmailRequestDto: UpdateUserEmailRequestDto,
+    @AuthenticatedEntity() user: User
+  ) {
+    return this.usersService.updateUserEmail(updateUserEmailRequestDto, user)
   }
 
   @Patch('me/update/image')

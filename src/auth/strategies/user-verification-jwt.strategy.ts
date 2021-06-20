@@ -3,9 +3,9 @@ import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { StrategyType } from '../enums/strategy-type.enum'
 import { UsersService } from '../../users/users.service'
-import authConfig from '../config/auth.config'
+import tokensConfig from '../../tokens/config/tokens.config'
 import { ConfigType } from '@nestjs/config'
-import { JwtPayload } from '../interfaces/jwt-payload.interface'
+import { JwtPayload } from '../../tokens/interfaces/jwt-payload.interface'
 import { User } from '../../users/entities/user.entity'
 
 @Injectable()
@@ -15,12 +15,12 @@ export class UserVerificationJwtStrategy extends PassportStrategy(
 ) {
   constructor(
     private readonly usersService: UsersService,
-    @Inject(authConfig.KEY)
-    private readonly authConfiguration: ConfigType<typeof authConfig>
+    @Inject(tokensConfig.KEY)
+    private readonly tokensConfiguration: ConfigType<typeof tokensConfig>
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromUrlQueryParameter('token'),
-      secretOrKey: authConfiguration.verificationTokenSecret
+      secretOrKey: tokensConfiguration.verificationTokenSecret
     })
   }
 
