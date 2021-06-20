@@ -8,7 +8,8 @@ export class CreateProductRequestDto {
   @IsString()
   description: string
 
-  @IsNumberString()
+  @Transform((data) => parseInt(data.value))
+  @IsNumber()
   price: number
 
   @IsString()

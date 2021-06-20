@@ -1,10 +1,8 @@
 import {
   BadRequestException,
-  Body,
   ConflictException,
   Injectable,
-  NotFoundException,
-  UploadedFile
+  NotFoundException
 } from '@nestjs/common'
 import { CreateProductRequestDto } from './dtos/create-product-request.dto'
 import { QrService } from '../qr/qr.service'
@@ -21,6 +19,9 @@ import { ProductResponseDto } from './dtos/product-response.dto'
 import { CreateMenuRequestDto } from './dtos/create-menu-request.dto'
 import { MenuResponseDto } from './dtos/menu-response.dto'
 import { Menu } from './entities/menu.entity'
+import { CreateCategoryRequestDto } from './dtos/create-category-request.dto'
+import { CategoryResponseDto } from './dtos/category-response.dto'
+import { Category } from './entities/category.entity'
 
 @Injectable()
 export class OffersService {
@@ -35,6 +36,12 @@ export class OffersService {
     private readonly filesService: FilesService,
     private readonly connection: Connection
   ) {}
+
+  /**
+   *
+   * Menus
+   *
+   */
 
   async createMenu(
     createMenuRequestDto: CreateMenuRequestDto,
@@ -77,10 +84,7 @@ export class OffersService {
       await this.filesService.removeLocalImage(image)
       await this.filesService.deleteRemoteImage(image.name)
 
-      throw new ConflictException(
-        error.message,
-        'Failed updating restaurant image'
-      )
+      throw new ConflictException(error.message, 'Failed creating menu')
     } finally {
       await queryRunner.release()
     }
@@ -92,9 +96,79 @@ export class OffersService {
     return menuResponseDto
   }
 
+  /**
+   *
+   * Categories
+   *
+   */
+
+  async createCategory(
+    createCategoryRequestDto: CreateCategoryRequestDto,
+    file: Express.Multer.File
+  ): Promise<CategoryResponseDto> {
+    if (!file) {
+      throw new BadRequestException('Image file can not be empty')
+    }
+
+    const { name, menuId } = createCategoryRequestDto
+
+    const menu = await this.menusRepository.findOne(menuId)
+
+    if (!menuId) {
+      throw new NotFoundException('Menu not found')
+    }
+
+    const queryRunner = this.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    let image: Image
+    let category: Category
+
+    try {
+      image = await this.filesService.uploadImage({
+        name: file.originalname,
+        mime: file.mimetype,
+        buffer: file.buffer
+      })
+
+      category = this.categoriesRepository.createCategory({
+        name,
+        menu,
+        image
+      })
+
+      await queryRunner.manager.save(image)
+      await queryRunner.manager.save(category)
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+
+      await this.filesService.removeLocalImage(image)
+      await this.filesService.deleteRemoteImage(image.name)
+
+      throw new ConflictException(error.message, 'Failed creating category')
+    } finally {
+      await queryRunner.release()
+    }
+
+    const categoryResponseDto = plainToClass(CategoryResponseDto, category, {
+      excludeExtraneousValues: true
+    })
+
+    return categoryResponseDto
+  }
+
+  /**
+   *
+   * Products
+   *
+   */
+
   async createProduct(
-    @Body() createProductRequestDto: CreateProductRequestDto,
-    @UploadedFile() file: Express.Multer.File
+    createProductRequestDto: CreateProductRequestDto,
+    file: Express.Multer.File
   ): Promise<ProductResponseDto> {
     if (!file) {
       throw new BadRequestException('Image file can not be empty')
@@ -142,10 +216,7 @@ export class OffersService {
       await this.filesService.removeLocalImage(image)
       await this.filesService.deleteRemoteImage(image.name)
 
-      throw new ConflictException(
-        error.message,
-        'Failed updating restaurant image'
-      )
+      throw new ConflictException(error.message, 'Failed creating product')
     } finally {
       await queryRunner.release()
     }

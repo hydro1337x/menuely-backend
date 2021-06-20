@@ -23,7 +23,7 @@ export class Product extends BaseEntity {
   @Column()
   description: string
 
-  @Column()
+  @Column({ type: 'float' })
   price: number
 
   @Column()

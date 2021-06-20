@@ -16,6 +16,8 @@ import { OffersService } from './offers.service'
 import { ProductResponseDto } from './dtos/product-response.dto'
 import { CreateMenuRequestDto } from './dtos/create-menu-request.dto'
 import { MenuResponseDto } from './dtos/menu-response.dto'
+import { CreateCategoryRequestDto } from './dtos/create-category-request.dto'
+import { CategoryResponseDto } from './dtos/category-response.dto'
 
 @Controller('offers')
 export class OffersController {
@@ -30,6 +32,17 @@ export class OffersController {
     @UploadedFile() file: Express.Multer.File
   ): Promise<MenuResponseDto> {
     return this.offersService.createMenu(createMenuRequestDto, file)
+  }
+
+  @Post('categories')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  @UsePipes(ValidationPipe)
+  @UseInterceptors(FileInterceptor('image'))
+  createCategory(
+    @Body() createCategoryRequestDto: CreateCategoryRequestDto,
+    @UploadedFile() file: Express.Multer.File
+  ): Promise<CategoryResponseDto> {
+    return this.offersService.createCategory(createCategoryRequestDto, file)
   }
 
   @Post('products')
