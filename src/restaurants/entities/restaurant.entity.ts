@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
-import { RefreshToken } from '../../auth/entities/refresh-token.entity'
+import { RefreshToken } from '../../tokens/entities/refresh-token.entity'
 import { Image } from '../../files/entities/image.entity'
 
 @Entity()

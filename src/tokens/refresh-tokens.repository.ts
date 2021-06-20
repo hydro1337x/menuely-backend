@@ -1,5 +1,5 @@
 import { EntityRepository, Repository } from 'typeorm'
-import { RefreshToken } from '../auth/entities/refresh-token.entity'
+import { RefreshToken } from './entities/refresh-token.entity'
 import { Inject, InternalServerErrorException } from '@nestjs/common'
 import tokensConfig from './config/tokens.config'
 import { ConfigType } from '@nestjs/config'

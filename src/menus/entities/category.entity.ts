@@ -4,16 +4,18 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
 import { Image } from '../../files/entities/image.entity'
-import { Category } from './category.entity'
+import { Menu } from './menu.entity'
+import { Product } from './product.entity'
 
 @Entity()
-export class Menu extends BaseEntity {
+export class Category extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
@@ -31,8 +33,11 @@ export class Menu extends BaseEntity {
 
   @OneToOne(() => Image)
   @JoinColumn()
-  qrCodeImage: Image
+  image: Image
 
-  @OneToMany(() => Category, (category) => category.menu)
-  categories: Category[]
+  @ManyToOne(() => Menu, (menu) => menu.categories)
+  menu: Menu
+
+  @OneToMany(() => Product, (product) => product.category)
+  products: Product[]
 }
