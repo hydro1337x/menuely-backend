@@ -51,7 +51,7 @@ export class UsersController {
     return this.usersService.getUsers(filterUserRequestDto)
   }
 
-  @Patch('me/update/profile')
+  @Patch('me/profile')
   @UseGuards(UserAccessJwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   updateUserProfile(
@@ -64,7 +64,7 @@ export class UsersController {
     )
   }
 
-  @Patch('me/update/password')
+  @Patch('me/password')
   @UseGuards(UserAccessJwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   updateUserPassword(
@@ -77,7 +77,7 @@ export class UsersController {
     )
   }
 
-  @Patch('me/update/email')
+  @Patch('me/email')
   @UseGuards(UserAccessJwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   updateUserEmail(
@@ -87,7 +87,7 @@ export class UsersController {
     return this.usersService.updateUserEmail(updateUserEmailRequestDto, user)
   }
 
-  @Patch('me/update/image')
+  @Patch('me/image')
   @UseGuards(UserAccessJwtAuthGuard)
   @UsePipes(ValidationPipe)
   @UseInterceptors(FileInterceptor('image'))

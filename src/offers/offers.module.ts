@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
-import { MenusController } from './menus.controller'
-import { MenusService } from './menus.service'
+import { OffersController } from './offers.controller'
+import { OffersService } from './offers.service'
 import { QrModule } from '../qr/qr.module'
 import { FilesModule } from '../files/files.module'
 import { TypeOrmModule } from '@nestjs/typeorm'
@@ -19,7 +19,7 @@ import { ProductsRepository } from './repositories/products.repository'
     QrModule,
     FilesModule
   ],
-  controllers: [MenusController],
-  providers: [MenusService]
+  controllers: [OffersController],
+  providers: [OffersService]
 })
-export class MenusModule {}
+export class OffersModule {}

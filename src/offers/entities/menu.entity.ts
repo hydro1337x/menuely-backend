@@ -4,7 +4,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
@@ -13,15 +13,12 @@ import { Image } from '../../files/entities/image.entity'
 import { Category } from './category.entity'
 
 @Entity()
-export class Product extends BaseEntity {
+export class Menu extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
   @Column()
   name: string
-
-  @Column()
-  price: number
 
   @Column()
   currency: string
@@ -34,8 +31,8 @@ export class Product extends BaseEntity {
 
   @OneToOne(() => Image)
   @JoinColumn()
-  image: Image
+  qrCodeImage: Image
 
-  @ManyToOne(() => Category, (category) => category.products)
-  category: Category
+  @OneToMany(() => Category, (category) => category.menu, { nullable: true })
+  categories: Category[]
 }

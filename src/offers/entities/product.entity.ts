@@ -5,17 +5,15 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
 import { Image } from '../../files/entities/image.entity'
-import { Menu } from './menu.entity'
-import { Product } from './product.entity'
+import { Category } from './category.entity'
 
 @Entity()
-export class Category extends BaseEntity {
+export class Product extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number
 
@@ -23,7 +21,16 @@ export class Category extends BaseEntity {
   name: string
 
   @Column()
+  description: string
+
+  @Column()
+  price: number
+
+  @Column()
   currency: string
+
+  @Column()
+  categoryId: number
 
   @CreateDateColumn()
   createdAt: Date
@@ -35,9 +42,6 @@ export class Category extends BaseEntity {
   @JoinColumn()
   image: Image
 
-  @ManyToOne(() => Menu, (menu) => menu.categories)
-  menu: Menu
-
-  @OneToMany(() => Product, (product) => product.category)
-  products: Product[]
+  @ManyToOne(() => Category, (category) => category.products)
+  category: Category
 }

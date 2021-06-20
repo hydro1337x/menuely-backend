@@ -52,7 +52,7 @@ export class RestaurantsController {
     return this.restaurantsService.getRestaurants(filterRestaurantRequestDto)
   }
 
-  @Patch('me/update/profile')
+  @Patch('me/profile')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   updateRestaurantProfile(
@@ -66,7 +66,7 @@ export class RestaurantsController {
     )
   }
 
-  @Patch('me/update/password')
+  @Patch('me/password')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   updateRestaurantPassword(
@@ -80,7 +80,7 @@ export class RestaurantsController {
     )
   }
 
-  @Patch('me/update/email')
+  @Patch('me/email')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   updateRestaurantEmail(
@@ -93,7 +93,7 @@ export class RestaurantsController {
     )
   }
 
-  @Patch('me/update/image')
+  @Patch('me/image')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(ValidationPipe)
   @UseInterceptors(FileInterceptor('image'))
