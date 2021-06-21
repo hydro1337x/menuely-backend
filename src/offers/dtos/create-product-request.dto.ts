@@ -12,9 +12,6 @@ export class CreateProductRequestDto {
   @IsNumber()
   price: number
 
-  @IsString()
-  currency: string
-
   @Transform((data) => parseInt(data.value))
   @IsNumber()
   @NotEquals(0)

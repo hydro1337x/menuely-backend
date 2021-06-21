@@ -18,7 +18,8 @@ import { CreateMenuRequestDto } from './dtos/create-menu-request.dto'
 import { MenuResponseDto } from './dtos/menu-response.dto'
 import { CreateCategoryRequestDto } from './dtos/create-category-request.dto'
 import { CategoryResponseDto } from './dtos/category-response.dto'
-import { RestaurantProfileResponseDto } from '../restaurants/dtos/restaurant-profile-response.dto'
+import { UpdateProductRequestDto } from './dtos/update-product-request.dto'
+import { UpdateCategoryRequestDto } from './dtos/update-category-request.dto'
 
 @Injectable()
 export class OffersService {
@@ -97,6 +98,34 @@ export class OffersService {
    *
    */
 
+  async getCategory(id: number): Promise<CategoryResponseDto> {
+    const category = await this.categoriesRepository.findCategory(id)
+
+    if (!category) {
+      throw new NotFoundException('Category not found')
+    }
+
+    const categoryResponseDto = plainToClass(CategoryResponseDto, category, {
+      excludeExtraneousValues: true
+    })
+
+    return categoryResponseDto
+  }
+
+  async getCategories(menuId: number): Promise<CategoryResponseDto[]> {
+    const categories = await this.categoriesRepository.findCategories(menuId)
+
+    const categoriesResponseDtos = plainToClass(
+      CategoryResponseDto,
+      categories,
+      {
+        excludeExtraneousValues: true
+      }
+    )
+
+    return categoriesResponseDtos
+  }
+
   async createCategory(
     createCategoryRequestDto: CreateCategoryRequestDto,
     file: Express.Multer.File
@@ -156,6 +185,109 @@ export class OffersService {
     return categoryResponseDto
   }
 
+  async updateCategory(
+    id: number,
+    updateCategoryRequestDto: UpdateCategoryRequestDto,
+    file: Express.Multer.File
+  ): Promise<void> {
+    const { name } = updateCategoryRequestDto
+
+    if (!name && !file) {
+      throw new BadRequestException(
+        'UpdateCategoryRequestDto',
+        'At least one field needs to be provided'
+      )
+    }
+
+    const category = await this.categoriesRepository.findCategory(id)
+
+    if (!category) {
+      throw new NotFoundException(
+        'UpdateCategoryRequestDto',
+        'Category for updating not found'
+      )
+    }
+
+    const imageForDeletion = category.image
+
+    const queryRunner = this.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      if (file) {
+        // eslint-disable-next-line no-var
+        var image = await this.filesService.uploadImage({
+          name: file.originalname,
+          mime: file.mimetype,
+          buffer: file.buffer
+        })
+      }
+
+      if (name) {
+        category.name = name
+      }
+
+      if (image) {
+        await queryRunner.manager.save(image)
+        category.image = image
+      }
+
+      await queryRunner.manager.save(category)
+
+      // A new image is added so the previous can be deleted
+      if (imageForDeletion && image) {
+        const imageForDeletionName = imageForDeletion.name
+        await queryRunner.manager.remove(imageForDeletion)
+        await this.filesService.deleteRemoteImage(imageForDeletionName)
+      }
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+
+      if (image) {
+        await this.filesService.deleteRemoteImage(image.name)
+        await this.filesService.removeLocalImage(image)
+      }
+
+      throw new ConflictException(error.message, 'Failed updating category')
+    } finally {
+      await queryRunner.release()
+    }
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    const category = await this.categoriesRepository.findCategory(id)
+
+    if (!category) {
+      throw new NotFoundException('Category not found')
+    }
+
+    const queryRunner = this.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      const products = await this.productsRepository.findProducts(category.id)
+      for (const product of products) {
+        await this.deleteProduct(product.id)
+      }
+      const { name } = category.image
+      await this.categoriesRepository.remove(category)
+      await this.filesService.removeLocalImage(category.image)
+      await this.filesService.deleteRemoteImage(name)
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+
+      throw new ConflictException(error.message, 'Failed deleting category')
+    } finally {
+      await queryRunner.release()
+    }
+  }
+
   /**
    *
    * Products
@@ -169,11 +301,11 @@ export class OffersService {
       throw new NotFoundException('Product not found')
     }
 
-    const productsResponseDto = plainToClass(ProductResponseDto, product, {
+    const productResponseDto = plainToClass(ProductResponseDto, product, {
       excludeExtraneousValues: true
     })
 
-    return productsResponseDto
+    return productResponseDto
   }
 
   async getProducts(categoryId: number): Promise<ProductResponseDto[]> {
@@ -194,8 +326,7 @@ export class OffersService {
       throw new BadRequestException('Image file can not be empty')
     }
 
-    const { name, description, price, currency, categoryId } =
-      createProductRequestDto
+    const { name, description, price, categoryId } = createProductRequestDto
 
     const category = await this.categoriesRepository.findOne(categoryId)
 
@@ -220,7 +351,7 @@ export class OffersService {
         name,
         description,
         price,
-        currency,
+        currency: category.currency,
         category,
         image
       })
@@ -247,6 +378,85 @@ export class OffersService {
     })
 
     return productResponseDto
+  }
+
+  async updateProduct(
+    id: number,
+    updateProductRequestDto: UpdateProductRequestDto,
+    file: Express.Multer.File
+  ): Promise<void> {
+    const { name, description, price } = updateProductRequestDto
+
+    if (!name && !description && !price && !file) {
+      throw new BadRequestException(
+        'UpdateProductRequestDto',
+        'At least one field needs to be provided'
+      )
+    }
+
+    const product = await this.productsRepository.findProduct(id)
+
+    if (!product) {
+      throw new NotFoundException(
+        'UpdateProductRequestDto',
+        'Product for updating not found'
+      )
+    }
+
+    const imageForDeletion = product.image
+
+    const queryRunner = this.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      if (file) {
+        // eslint-disable-next-line no-var
+        var image = await this.filesService.uploadImage({
+          name: file.originalname,
+          mime: file.mimetype,
+          buffer: file.buffer
+        })
+      }
+
+      if (name) {
+        product.name = name
+      }
+
+      if (description) {
+        product.description = description
+      }
+
+      if (price) {
+        product.price = price
+      }
+
+      if (image) {
+        await queryRunner.manager.save(image)
+        product.image = image
+      }
+
+      await queryRunner.manager.save(product)
+
+      if (imageForDeletion && image) {
+        const imageForDeletionName = imageForDeletion.name
+        await queryRunner.manager.remove(imageForDeletion)
+        await this.filesService.deleteRemoteImage(imageForDeletionName)
+      }
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+
+      if (image) {
+        await this.filesService.deleteRemoteImage(image.name)
+        await this.filesService.removeLocalImage(image)
+      }
+
+      throw new ConflictException(error.message, 'Failed updating product')
+    } finally {
+      await queryRunner.release()
+    }
   }
 
   async deleteProduct(id: number): Promise<void> {

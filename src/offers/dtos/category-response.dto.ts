@@ -11,7 +11,6 @@ export class CategoryResponseDto {
   @Expose()
   currency: string
 
-  // TODO: - Transform data to insert menuId
   @Expose()
   menuId: number
 

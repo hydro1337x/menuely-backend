@@ -1,7 +1,6 @@
 import { EntityRepository, Repository } from 'typeorm'
 import { Product } from '../entities/product.entity'
 import { CreateProductParams } from '../interfaces/create-product-params.interface'
-import { UniqueSearchCriteria } from '../../global/interfaces/unique-search-criteria.interface'
 
 @EntityRepository(Product)
 export class ProductsRepository extends Repository<Product> {

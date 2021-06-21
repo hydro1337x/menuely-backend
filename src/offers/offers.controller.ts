@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   UploadedFile,
@@ -22,6 +23,8 @@ import { CreateMenuRequestDto } from './dtos/create-menu-request.dto'
 import { MenuResponseDto } from './dtos/menu-response.dto'
 import { CreateCategoryRequestDto } from './dtos/create-category-request.dto'
 import { CategoryResponseDto } from './dtos/category-response.dto'
+import { UpdateProductRequestDto } from './dtos/update-product-request.dto'
+import { UpdateCategoryRequestDto } from './dtos/update-category-request.dto'
 
 @Controller('offers')
 export class OffersController {
@@ -46,6 +49,21 @@ export class OffersController {
    * Categories
    *
    */
+
+  @Get('categories/:id')
+  getCategory(
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<CategoryResponseDto> {
+    return this.offersService.getCategory(id)
+  }
+
+  @Get('categories')
+  getCategories(
+    @Query('menuId', ParseIntPipe) menuId: number
+  ): Promise<CategoryResponseDto[]> {
+    return this.offersService.getCategories(menuId)
+  }
+
   @Post('categories')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(ValidationPipe)
@@ -55,6 +73,24 @@ export class OffersController {
     @UploadedFile() file: Express.Multer.File
   ): Promise<CategoryResponseDto> {
     return this.offersService.createCategory(createCategoryRequestDto, file)
+  }
+
+  @Patch('categories/:id')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  @UseInterceptors(FileInterceptor('image'))
+  updateCategory(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCategoryRequestDto: UpdateCategoryRequestDto,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    return this.offersService.updateCategory(id, updateCategoryRequestDto, file)
+  }
+
+  @Delete('categories/:id')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  deleteCategory(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.offersService.deleteCategory(id)
   }
 
   /**
@@ -86,6 +122,18 @@ export class OffersController {
     @UploadedFile() file: Express.Multer.File
   ): Promise<ProductResponseDto> {
     return this.offersService.createProduct(createProductRequestDto, file)
+  }
+
+  @Patch('products/:id')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  @UseInterceptors(FileInterceptor('image'))
+  updateProduct(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateProductRequestDto: UpdateProductRequestDto,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    return this.offersService.updateProduct(id, updateProductRequestDto, file)
   }
 
   @Delete('products/:id')
