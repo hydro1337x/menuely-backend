@@ -18,6 +18,7 @@ import { CreateMenuRequestDto } from './dtos/create-menu-request.dto'
 import { MenuResponseDto } from './dtos/menu-response.dto'
 import { CreateCategoryRequestDto } from './dtos/create-category-request.dto'
 import { CategoryResponseDto } from './dtos/category-response.dto'
+import { RestaurantProfileResponseDto } from '../restaurants/dtos/restaurant-profile-response.dto'
 
 @Injectable()
 export class OffersService {
@@ -160,6 +161,30 @@ export class OffersService {
    * Products
    *
    */
+
+  async getProduct(id: number): Promise<ProductResponseDto> {
+    const product = await this.productsRepository.findProduct(id)
+
+    if (!product) {
+      throw new NotFoundException('Product not found')
+    }
+
+    const productsResponseDto = plainToClass(ProductResponseDto, product, {
+      excludeExtraneousValues: true
+    })
+
+    return productsResponseDto
+  }
+
+  async getProducts(categoryId: number): Promise<ProductResponseDto[]> {
+    const products = await this.productsRepository.findProducts(categoryId)
+
+    const productsResponseDtos = plainToClass(ProductResponseDto, products, {
+      excludeExtraneousValues: true
+    })
+
+    return productsResponseDtos
+  }
 
   async createProduct(
     createProductRequestDto: CreateProductRequestDto,

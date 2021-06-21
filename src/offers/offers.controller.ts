@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -61,6 +62,21 @@ export class OffersController {
    * Products
    *
    */
+
+  @Get('products/:id')
+  getProduct(
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<ProductResponseDto> {
+    return this.offersService.getProduct(id)
+  }
+
+  @Get('products')
+  getProducts(
+    @Query('categoryId', ParseIntPipe) categoryId: number
+  ): Promise<ProductResponseDto[]> {
+    return this.offersService.getProducts(categoryId)
+  }
+
   @Post('products')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(ValidationPipe)

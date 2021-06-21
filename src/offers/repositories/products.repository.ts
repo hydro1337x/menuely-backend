@@ -11,6 +11,21 @@ export class ProductsRepository extends Repository<Product> {
     return product
   }
 
+  async findProducts(categoryId: number): Promise<Product[]> {
+    const query = this.createQueryBuilder('product')
+
+    if (categoryId) {
+      query.where('product.categoryId = :categoryId', { categoryId })
+    }
+
+    const products = await query
+      .leftJoinAndSelect('product.image', 'image')
+      .leftJoinAndSelect('product.category', 'category')
+      .getMany()
+
+    return products
+  }
+
   createProduct(createProductParams: CreateProductParams): Product {
     const { name, description, price, currency, category, image } =
       createProductParams
