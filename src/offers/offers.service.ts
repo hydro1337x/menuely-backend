@@ -189,6 +189,37 @@ export class OffersService {
     }
   }
 
+  async deleteMenu(id: number): Promise<void> {
+    const menu = await this.menusRepository.findMenu(id)
+
+    if (!menu) {
+      throw new NotFoundException('Menu not found')
+    }
+
+    const queryRunner = this.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      const categories = await this.categoriesRepository.findCategories(menu.id)
+      for (const category of categories) {
+        await this.deleteCategory(category.id)
+      }
+      const { name } = menu.qrCodeImage
+      await this.menusRepository.remove(menu)
+      await this.filesService.removeLocalImage(menu.qrCodeImage)
+      await this.filesService.deleteRemoteImage(name)
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+
+      throw new ConflictException(error.message, 'Failed deleting menu')
+    } finally {
+      await queryRunner.release()
+    }
+  }
+
   /**
    *
    * Categories

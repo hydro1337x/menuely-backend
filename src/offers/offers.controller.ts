@@ -68,6 +68,12 @@ export class OffersController {
     return this.offersService.updateMenu(id, updateMenuRequestDto)
   }
 
+  @Delete('menus/:id')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  deleteMenu(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.offersService.deleteMenu(id)
+  }
+
   /**
    *
    * Categories
