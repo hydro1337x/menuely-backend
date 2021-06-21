@@ -11,6 +11,7 @@ import {
 } from 'typeorm'
 import { RefreshToken } from '../../tokens/entities/refresh-token.entity'
 import { Image } from '../../files/entities/image.entity'
+import { Menu } from '../../offers/entities/menu.entity'
 
 @Entity()
 export class Restaurant extends BaseEntity {
@@ -55,6 +56,9 @@ export class Restaurant extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date
+
+  @OneToMany(() => Menu, (menu) => menu.restaurant, { nullable: true })
+  menus: Menu[]
 
   @OneToOne(() => Image, { nullable: true })
   @JoinColumn()

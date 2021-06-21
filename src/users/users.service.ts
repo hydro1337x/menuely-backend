@@ -230,6 +230,7 @@ export class UsersService {
   }
 
   async deleteUser(user: User): Promise<void> {
+    // TODO: - Remove menus and images when deleting
     try {
       await user.remove()
     } catch (error) {

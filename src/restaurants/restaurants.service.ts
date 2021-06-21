@@ -245,6 +245,7 @@ export class RestaurantsService {
   }
 
   async deleteRestaurant(restaurant: Restaurant): Promise<void> {
+    // TODO: - Remove menus and images when deleting
     try {
       await restaurant.remove()
     } catch (error) {
