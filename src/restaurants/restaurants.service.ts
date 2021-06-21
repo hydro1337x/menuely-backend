@@ -202,7 +202,8 @@ export class RestaurantsService {
         : restaurant.coverImage
 
     try {
-      const image = await this.filesService.uploadImage({
+      // eslint-disable-next-line no-var
+      var image = await this.filesService.uploadImage({
         name: file.originalname,
         mime: file.mimetype,
         buffer: file.buffer
@@ -228,6 +229,12 @@ export class RestaurantsService {
       await queryRunner.commitTransaction()
     } catch (error) {
       await queryRunner.rollbackTransaction()
+
+      if (image) {
+        await this.filesService.deleteRemoteImage(image.name)
+        await this.filesService.removeLocalImage(image)
+      }
+
       throw new ConflictException(
         error.message,
         'Failed updating restaurant image'

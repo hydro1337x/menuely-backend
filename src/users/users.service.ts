@@ -190,7 +190,8 @@ export class UsersService {
       kind === UserImageKind.PROFILE ? user.profileImage : user.coverImage
 
     try {
-      const image = await this.filesService.uploadImage({
+      // eslint-disable-next-line no-var
+      var image = await this.filesService.uploadImage({
         name: file.originalname,
         mime: file.mimetype,
         buffer: file.buffer
@@ -216,6 +217,12 @@ export class UsersService {
       await queryRunner.commitTransaction()
     } catch (error) {
       await queryRunner.rollbackTransaction()
+
+      if (image) {
+        await this.filesService.deleteRemoteImage(image.name)
+        await this.filesService.removeLocalImage(image)
+      }
+
       throw new ConflictException(error.message, 'Failed updating user image')
     } finally {
       await queryRunner.release()

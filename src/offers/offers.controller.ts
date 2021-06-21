@@ -23,17 +23,25 @@ import { CategoryResponseDto } from './dtos/category-response.dto'
 export class OffersController {
   constructor(private readonly offersService: OffersService) {}
 
+  /**
+   *
+   * Menus
+   *
+   */
   @Post('menus')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(ValidationPipe)
-  @UseInterceptors(FileInterceptor('image'))
   createMenu(
-    @Body() createMenuRequestDto: CreateMenuRequestDto,
-    @UploadedFile() file: Express.Multer.File
+    @Body() createMenuRequestDto: CreateMenuRequestDto
   ): Promise<MenuResponseDto> {
-    return this.offersService.createMenu(createMenuRequestDto, file)
+    return this.offersService.createMenu(createMenuRequestDto)
   }
 
+  /**
+   *
+   * Categories
+   *
+   */
   @Post('categories')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(ValidationPipe)
@@ -45,6 +53,11 @@ export class OffersController {
     return this.offersService.createCategory(createCategoryRequestDto, file)
   }
 
+  /**
+   *
+   * Products
+   *
+   */
   @Post('products')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(ValidationPipe)

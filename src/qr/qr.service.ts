@@ -5,7 +5,7 @@ import { ImageFileParams } from '../files/interfaces/upload-file-params.interfac
 
 @Injectable()
 export class QrService {
-  async generateQrCodeWithBuffer(text: string): Promise<ImageFileParams> {
+  async generateQrCode(text: string): Promise<ImageFileParams> {
     let buffer: Buffer
     try {
       buffer = await qr.toBuffer(text, {
@@ -17,7 +17,7 @@ export class QrService {
     }
 
     const imageFileParams: ImageFileParams = {
-      name: uuid(),
+      name: uuid() + '.png',
       mime: 'image/png',
       buffer: buffer
     }

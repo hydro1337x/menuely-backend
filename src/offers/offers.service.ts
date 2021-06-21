@@ -44,45 +44,43 @@ export class OffersService {
    */
 
   async createMenu(
-    createMenuRequestDto: CreateMenuRequestDto,
-    file: Express.Multer.File
+    createMenuRequestDto: CreateMenuRequestDto
   ): Promise<MenuResponseDto> {
-    if (!file) {
-      throw new BadRequestException('Image file can not be empty')
-    }
-
     const { name, description, currency } = createMenuRequestDto
 
     const queryRunner = this.connection.createQueryRunner()
     await queryRunner.connect()
     await queryRunner.startTransaction()
 
-    let image: Image
-    let menu: Menu
-
     try {
-      image = await this.filesService.uploadImage({
-        name: file.originalname,
-        mime: file.mimetype,
-        buffer: file.buffer
-      })
-
-      menu = this.menusRepository.createMenu({
+      // eslint-disable-next-line no-var
+      var menu = this.menusRepository.createMenu({
         name,
         description,
-        currency,
-        image
+        currency
       })
 
+      await queryRunner.manager.save(menu)
+      // In order for the id property to be defined, it is needed to first save the menu in the database
+      const imageFileParams = await this.qrService.generateQrCode(
+        menu.id.toString()
+      )
+
+      // eslint-disable-next-line no-var
+      var image = await this.filesService.uploadImage(imageFileParams)
+
       await queryRunner.manager.save(image)
+      menu.qrCodeImage = image
       await queryRunner.manager.save(menu)
 
       await queryRunner.commitTransaction()
     } catch (error) {
       await queryRunner.rollbackTransaction()
 
-      await this.filesService.removeLocalImage(image)
-      await this.filesService.deleteRemoteImage(image.name)
+      if (image) {
+        await this.filesService.deleteRemoteImage(image.name)
+        await this.filesService.removeLocalImage(image)
+      }
 
       throw new ConflictException(error.message, 'Failed creating menu')
     } finally {
@@ -122,17 +120,16 @@ export class OffersService {
     await queryRunner.connect()
     await queryRunner.startTransaction()
 
-    let image: Image
-    let category: Category
-
     try {
-      image = await this.filesService.uploadImage({
+      // eslint-disable-next-line no-var
+      var image = await this.filesService.uploadImage({
         name: file.originalname,
         mime: file.mimetype,
         buffer: file.buffer
       })
 
-      category = this.categoriesRepository.createCategory({
+      // eslint-disable-next-line no-var
+      var category = this.categoriesRepository.createCategory({
         name,
         menu,
         image
@@ -145,8 +142,10 @@ export class OffersService {
     } catch (error) {
       await queryRunner.rollbackTransaction()
 
-      await this.filesService.removeLocalImage(image)
-      await this.filesService.deleteRemoteImage(image.name)
+      if (image) {
+        await this.filesService.deleteRemoteImage(image.name)
+        await this.filesService.removeLocalImage(image)
+      }
 
       throw new ConflictException(error.message, 'Failed creating category')
     } finally {
@@ -187,17 +186,16 @@ export class OffersService {
     await queryRunner.connect()
     await queryRunner.startTransaction()
 
-    let image: Image
-    let product: Product
-
     try {
-      image = await this.filesService.uploadImage({
+      // eslint-disable-next-line no-var
+      var image = await this.filesService.uploadImage({
         name: file.originalname,
         mime: file.mimetype,
         buffer: file.buffer
       })
 
-      product = this.productsRepository.createProduct({
+      // eslint-disable-next-line no-var
+      var product = this.productsRepository.createProduct({
         name,
         description,
         price,
@@ -213,8 +211,10 @@ export class OffersService {
     } catch (error) {
       await queryRunner.rollbackTransaction()
 
-      await this.filesService.removeLocalImage(image)
-      await this.filesService.deleteRemoteImage(image.name)
+      if (image) {
+        await this.filesService.deleteRemoteImage(image.name)
+        await this.filesService.removeLocalImage(image)
+      }
 
       throw new ConflictException(error.message, 'Failed creating product')
     } finally {

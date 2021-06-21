@@ -6,6 +6,4 @@ export interface CreateMenuParams {
   description: string
 
   currency: string
-
-  image: Image
 }
