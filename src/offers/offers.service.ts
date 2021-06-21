@@ -12,16 +12,12 @@ import { MenusRepository } from './repositories/menus.repository'
 import { CategoriesRepository } from './repositories/categories.repository'
 import { ProductsRepository } from './repositories/products.repository'
 import { Connection } from 'typeorm'
-import { Image } from '../files/entities/image.entity'
-import { Product } from './entities/product.entity'
 import { plainToClass } from 'class-transformer'
 import { ProductResponseDto } from './dtos/product-response.dto'
 import { CreateMenuRequestDto } from './dtos/create-menu-request.dto'
 import { MenuResponseDto } from './dtos/menu-response.dto'
-import { Menu } from './entities/menu.entity'
 import { CreateCategoryRequestDto } from './dtos/create-category-request.dto'
 import { CategoryResponseDto } from './dtos/category-response.dto'
-import { Category } from './entities/category.entity'
 
 @Injectable()
 export class OffersService {
@@ -226,5 +222,32 @@ export class OffersService {
     })
 
     return productResponseDto
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    const product = await this.productsRepository.findProduct(id)
+
+    if (!product) {
+      throw new NotFoundException('Product not found')
+    }
+
+    const queryRunner = this.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      const { name } = product.image
+      await this.productsRepository.remove(product)
+      await this.filesService.removeLocalImage(product.image)
+      await this.filesService.deleteRemoteImage(name)
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+
+      throw new ConflictException(error.message, 'Failed deleting product')
+    } finally {
+      await queryRunner.release()
+    }
   }
 }

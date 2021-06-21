@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
+  ParseIntPipe,
   Post,
   UploadedFile,
   UseGuards,
@@ -67,5 +70,11 @@ export class OffersController {
     @UploadedFile() file: Express.Multer.File
   ): Promise<ProductResponseDto> {
     return this.offersService.createProduct(createProductRequestDto, file)
+  }
+
+  @Delete('products/:id')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  deleteProduct(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.offersService.deleteProduct(id)
   }
 }
