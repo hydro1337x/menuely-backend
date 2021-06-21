@@ -20,6 +20,8 @@ import { CreateCategoryRequestDto } from './dtos/create-category-request.dto'
 import { CategoryResponseDto } from './dtos/category-response.dto'
 import { UpdateProductRequestDto } from './dtos/update-product-request.dto'
 import { UpdateCategoryRequestDto } from './dtos/update-category-request.dto'
+import { UpdateMenuRequestDto } from './dtos/update-menu-request.dto'
+import { Product } from './entities/product.entity'
 
 @Injectable()
 export class OffersService {
@@ -40,6 +42,30 @@ export class OffersService {
    * Menus
    *
    */
+
+  async getMenu(id: number): Promise<MenuResponseDto> {
+    const menu = await this.menusRepository.findMenu(id)
+
+    if (!menu) {
+      throw new NotFoundException('Menu not found')
+    }
+
+    const menuResponseDto = plainToClass(MenuResponseDto, menu, {
+      excludeExtraneousValues: true
+    })
+
+    return menuResponseDto
+  }
+
+  async getMenus(restaurantId: number): Promise<MenuResponseDto[]> {
+    const menus = await this.menusRepository.findMenus(restaurantId)
+
+    const menuResponseDtos = plainToClass(MenuResponseDto, menus, {
+      excludeExtraneousValues: true
+    })
+
+    return menuResponseDtos
+  }
 
   async createMenu(
     createMenuRequestDto: CreateMenuRequestDto
@@ -92,6 +118,77 @@ export class OffersService {
     return menuResponseDto
   }
 
+  async updateMenu(
+    id: number,
+    updateMenuRequestDto: UpdateMenuRequestDto
+  ): Promise<void> {
+    const { name, description, currency } = updateMenuRequestDto
+
+    if (!name && !description && !currency) {
+      throw new BadRequestException(
+        'UpdateMenuRequestDto',
+        'At least one field needs to be provided'
+      )
+    }
+
+    const menu = await this.menusRepository.findMenu(id)
+
+    if (!menu) {
+      throw new NotFoundException(
+        'UpdateMenuRequestDto',
+        'Menu for updating not found'
+      )
+    }
+
+    const queryRunner = this.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      if (name) {
+        menu.name = name
+      }
+
+      if (description) {
+        menu.description = description
+      }
+
+      if (currency) {
+        menu.currency = currency
+        const categories = await this.categoriesRepository.findCategories(
+          menu.id
+        )
+
+        const products: Product[] = []
+
+        for (const category of categories) {
+          category.currency = currency
+          const categoryProducts: Product[] =
+            await this.productsRepository.findProducts(category.id)
+
+          products.push(...categoryProducts)
+        }
+
+        products.forEach((product) => {
+          product.currency = currency
+        })
+
+        await queryRunner.manager.save(products)
+        await queryRunner.manager.save(categories)
+      }
+
+      await queryRunner.manager.save(menu)
+
+      await queryRunner.commitTransaction()
+    } catch (error) {
+      await queryRunner.rollbackTransaction()
+
+      throw new ConflictException(error.message, 'Failed updating menu')
+    } finally {
+      await queryRunner.release()
+    }
+  }
+
   /**
    *
    * Categories
@@ -115,15 +212,11 @@ export class OffersService {
   async getCategories(menuId: number): Promise<CategoryResponseDto[]> {
     const categories = await this.categoriesRepository.findCategories(menuId)
 
-    const categoriesResponseDtos = plainToClass(
-      CategoryResponseDto,
-      categories,
-      {
-        excludeExtraneousValues: true
-      }
-    )
+    const categoryResponseDtos = plainToClass(CategoryResponseDto, categories, {
+      excludeExtraneousValues: true
+    })
 
-    return categoriesResponseDtos
+    return categoryResponseDtos
   }
 
   async createCategory(
@@ -311,11 +404,11 @@ export class OffersService {
   async getProducts(categoryId: number): Promise<ProductResponseDto[]> {
     const products = await this.productsRepository.findProducts(categoryId)
 
-    const productsResponseDtos = plainToClass(ProductResponseDto, products, {
+    const productResponseDtos = plainToClass(ProductResponseDto, products, {
       excludeExtraneousValues: true
     })
 
-    return productsResponseDtos
+    return productResponseDtos
   }
 
   async createProduct(

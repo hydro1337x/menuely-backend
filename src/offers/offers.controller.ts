@@ -25,6 +25,7 @@ import { CreateCategoryRequestDto } from './dtos/create-category-request.dto'
 import { CategoryResponseDto } from './dtos/category-response.dto'
 import { UpdateProductRequestDto } from './dtos/update-product-request.dto'
 import { UpdateCategoryRequestDto } from './dtos/update-category-request.dto'
+import { UpdateMenuRequestDto } from './dtos/update-menu-request.dto'
 
 @Controller('offers')
 export class OffersController {
@@ -35,6 +36,19 @@ export class OffersController {
    * Menus
    *
    */
+
+  @Get('menus/:id')
+  getMenu(@Param('id', ParseIntPipe) id: number): Promise<MenuResponseDto> {
+    return this.offersService.getMenu(id)
+  }
+
+  @Get('menus')
+  getMenus(
+    @Query('restaurantId', ParseIntPipe) restaurantId: number
+  ): Promise<MenuResponseDto[]> {
+    return this.offersService.getMenus(restaurantId)
+  }
+
   @Post('menus')
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(ValidationPipe)
@@ -42,6 +56,16 @@ export class OffersController {
     @Body() createMenuRequestDto: CreateMenuRequestDto
   ): Promise<MenuResponseDto> {
     return this.offersService.createMenu(createMenuRequestDto)
+  }
+
+  @Patch('menus/:id')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  updateMenu(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateMenuRequestDto: UpdateMenuRequestDto
+  ) {
+    return this.offersService.updateMenu(id, updateMenuRequestDto)
   }
 
   /**
