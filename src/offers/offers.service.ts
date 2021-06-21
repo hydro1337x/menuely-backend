@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException
 } from '@nestjs/common'
@@ -22,6 +23,7 @@ import { UpdateProductRequestDto } from './dtos/update-product-request.dto'
 import { UpdateCategoryRequestDto } from './dtos/update-category-request.dto'
 import { UpdateMenuRequestDto } from './dtos/update-menu-request.dto'
 import { Product } from './entities/product.entity'
+import { Restaurant } from '../restaurants/entities/restaurant.entity'
 
 @Injectable()
 export class OffersService {
@@ -70,7 +72,7 @@ export class OffersService {
   async createMenu(
     createMenuRequestDto: CreateMenuRequestDto
   ): Promise<MenuResponseDto> {
-    const { name, description, currency } = createMenuRequestDto
+    const { name, description, currency, restaurantId } = createMenuRequestDto
 
     const queryRunner = this.connection.createQueryRunner()
     await queryRunner.connect()
@@ -81,7 +83,8 @@ export class OffersService {
       var menu = this.menusRepository.createMenu({
         name,
         description,
-        currency
+        currency,
+        restaurantId
       })
 
       await queryRunner.manager.save(menu)
@@ -120,7 +123,8 @@ export class OffersService {
 
   async updateMenu(
     id: number,
-    updateMenuRequestDto: UpdateMenuRequestDto
+    updateMenuRequestDto: UpdateMenuRequestDto,
+    restaurant: Restaurant
   ): Promise<void> {
     const { name, description, currency } = updateMenuRequestDto
 
@@ -138,6 +142,10 @@ export class OffersService {
         'UpdateMenuRequestDto',
         'Menu for updating not found'
       )
+    }
+
+    if (menu.restaurantId !== restaurant.id) {
+      throw new ForbiddenException('UpdateMenuRequestDto', 'Resource not owned')
     }
 
     const queryRunner = this.connection.createQueryRunner()
@@ -189,11 +197,15 @@ export class OffersService {
     }
   }
 
-  async deleteMenu(id: number): Promise<void> {
+  async deleteMenu(id: number, restaurant: Restaurant): Promise<void> {
     const menu = await this.menusRepository.findMenu(id)
 
     if (!menu) {
       throw new NotFoundException('Menu not found')
+    }
+
+    if (menu.restaurantId !== restaurant.id) {
+      throw new ForbiddenException('DeleteMenu', 'Resource not owned')
     }
 
     const queryRunner = this.connection.createQueryRunner()
@@ -203,7 +215,7 @@ export class OffersService {
     try {
       const categories = await this.categoriesRepository.findCategories(menu.id)
       for (const category of categories) {
-        await this.deleteCategory(category.id)
+        await this.deleteCategory(category.id, restaurant)
       }
       const { name } = menu.qrCodeImage
       await this.menusRepository.remove(menu)
@@ -312,7 +324,8 @@ export class OffersService {
   async updateCategory(
     id: number,
     updateCategoryRequestDto: UpdateCategoryRequestDto,
-    file: Express.Multer.File
+    file: Express.Multer.File,
+    restaurant: Restaurant
   ): Promise<void> {
     const { name } = updateCategoryRequestDto
 
@@ -329,6 +342,13 @@ export class OffersService {
       throw new NotFoundException(
         'UpdateCategoryRequestDto',
         'Category for updating not found'
+      )
+    }
+
+    if (category.restaurantId !== restaurant.id) {
+      throw new ForbiddenException(
+        'UpdateCategoryRequestDto',
+        'Resource not owned'
       )
     }
 
@@ -381,11 +401,15 @@ export class OffersService {
     }
   }
 
-  async deleteCategory(id: number): Promise<void> {
+  async deleteCategory(id: number, restaurant: Restaurant): Promise<void> {
     const category = await this.categoriesRepository.findCategory(id)
 
     if (!category) {
       throw new NotFoundException('Category not found')
+    }
+
+    if (category.restaurantId !== restaurant.id) {
+      throw new ForbiddenException('DeleteCategory', 'Resource not owned')
     }
 
     const queryRunner = this.connection.createQueryRunner()
@@ -395,7 +419,7 @@ export class OffersService {
     try {
       const products = await this.productsRepository.findProducts(category.id)
       for (const product of products) {
-        await this.deleteProduct(product.id)
+        await this.deleteProduct(product.id, restaurant)
       }
       const { name } = category.image
       await this.categoriesRepository.remove(category)
@@ -507,7 +531,8 @@ export class OffersService {
   async updateProduct(
     id: number,
     updateProductRequestDto: UpdateProductRequestDto,
-    file: Express.Multer.File
+    file: Express.Multer.File,
+    restaurant: Restaurant
   ): Promise<void> {
     const { name, description, price } = updateProductRequestDto
 
@@ -524,6 +549,13 @@ export class OffersService {
       throw new NotFoundException(
         'UpdateProductRequestDto',
         'Product for updating not found'
+      )
+    }
+
+    if (product.restaurantId !== restaurant.id) {
+      throw new ForbiddenException(
+        'UpdateProductRequestDto',
+        'Resource not owned'
       )
     }
 
@@ -583,11 +615,15 @@ export class OffersService {
     }
   }
 
-  async deleteProduct(id: number): Promise<void> {
+  async deleteProduct(id: number, restaurant: Restaurant): Promise<void> {
     const product = await this.productsRepository.findProduct(id)
 
     if (!product) {
       throw new NotFoundException('Product not found')
+    }
+
+    if (product.restaurantId !== restaurant.id) {
+      throw new ForbiddenException('DeleteProduct', 'Resource not owned')
     }
 
     const queryRunner = this.connection.createQueryRunner()

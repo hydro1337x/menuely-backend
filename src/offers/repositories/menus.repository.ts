@@ -26,12 +26,13 @@ export class MenusRepository extends Repository<Menu> {
   }
 
   createMenu(createMenuParams: CreateMenuParams): Menu {
-    const { name, description, currency } = createMenuParams
+    const { name, description, currency, restaurantId } = createMenuParams
 
     const menu = new Menu()
     menu.name = name
     menu.description = description
     menu.currency = currency
+    menu.restaurantId = restaurantId
 
     return menu
   }

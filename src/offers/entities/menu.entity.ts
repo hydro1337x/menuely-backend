@@ -34,6 +34,9 @@ export class Menu extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date
 
+  @Column()
+  restaurantId: number
+
   @OneToOne(() => Image, { nullable: true })
   @JoinColumn()
   qrCodeImage: Image

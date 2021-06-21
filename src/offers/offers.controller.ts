@@ -26,6 +26,8 @@ import { CategoryResponseDto } from './dtos/category-response.dto'
 import { UpdateProductRequestDto } from './dtos/update-product-request.dto'
 import { UpdateCategoryRequestDto } from './dtos/update-category-request.dto'
 import { UpdateMenuRequestDto } from './dtos/update-menu-request.dto'
+import { AuthenticatedEntity } from '../auth/decorators/authenticated-entity.decorator'
+import { Restaurant } from '../restaurants/entities/restaurant.entity'
 
 @Controller('offers')
 export class OffersController {
@@ -63,15 +65,19 @@ export class OffersController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   updateMenu(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateMenuRequestDto: UpdateMenuRequestDto
+    @Body() updateMenuRequestDto: UpdateMenuRequestDto,
+    @AuthenticatedEntity() restaurant: Restaurant
   ) {
-    return this.offersService.updateMenu(id, updateMenuRequestDto)
+    return this.offersService.updateMenu(id, updateMenuRequestDto, restaurant)
   }
 
   @Delete('menus/:id')
   @UseGuards(RestaurantAccessJwtAuthGuard)
-  deleteMenu(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.offersService.deleteMenu(id)
+  deleteMenu(
+    @Param('id', ParseIntPipe) id: number,
+    @AuthenticatedEntity() restaurant: Restaurant
+  ): Promise<void> {
+    return this.offersService.deleteMenu(id, restaurant)
   }
 
   /**
@@ -112,15 +118,24 @@ export class OffersController {
   updateCategory(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCategoryRequestDto: UpdateCategoryRequestDto,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
+    @AuthenticatedEntity() restaurant: Restaurant
   ) {
-    return this.offersService.updateCategory(id, updateCategoryRequestDto, file)
+    return this.offersService.updateCategory(
+      id,
+      updateCategoryRequestDto,
+      file,
+      restaurant
+    )
   }
 
   @Delete('categories/:id')
   @UseGuards(RestaurantAccessJwtAuthGuard)
-  deleteCategory(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.offersService.deleteCategory(id)
+  deleteCategory(
+    @Param('id', ParseIntPipe) id: number,
+    @AuthenticatedEntity() restaurant: Restaurant
+  ): Promise<void> {
+    return this.offersService.deleteCategory(id, restaurant)
   }
 
   /**
@@ -161,14 +176,23 @@ export class OffersController {
   updateProduct(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProductRequestDto: UpdateProductRequestDto,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
+    @AuthenticatedEntity() restaurant: Restaurant
   ) {
-    return this.offersService.updateProduct(id, updateProductRequestDto, file)
+    return this.offersService.updateProduct(
+      id,
+      updateProductRequestDto,
+      file,
+      restaurant
+    )
   }
 
   @Delete('products/:id')
   @UseGuards(RestaurantAccessJwtAuthGuard)
-  deleteProduct(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.offersService.deleteProduct(id)
+  deleteProduct(
+    @Param('id', ParseIntPipe) id: number,
+    @AuthenticatedEntity() restaurant: Restaurant
+  ): Promise<void> {
+    return this.offersService.deleteProduct(id, restaurant)
   }
 }

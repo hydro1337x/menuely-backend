@@ -36,6 +36,7 @@ export class ProductsRepository extends Repository<Product> {
     product.currency = currency
     product.category = category
     product.image = image
+    product.restaurantId = category.restaurantId
 
     return product
   }

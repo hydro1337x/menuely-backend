@@ -31,6 +31,9 @@ export class Category extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date
 
+  @Column()
+  restaurantId: number
+
   @OneToOne(() => Image)
   @JoinColumn()
   image: Image

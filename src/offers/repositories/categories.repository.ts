@@ -33,6 +33,7 @@ export class CategoriesRepository extends Repository<Category> {
     category.currency = menu.currency
     category.menu = menu
     category.image = image
+    category.restaurantId = menu.restaurantId
 
     return category
   }

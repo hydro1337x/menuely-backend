@@ -32,6 +32,9 @@ export class Product extends BaseEntity {
   @Column()
   categoryId: number
 
+  @Column()
+  restaurantId: number
+
   @CreateDateColumn()
   createdAt: Date
 
