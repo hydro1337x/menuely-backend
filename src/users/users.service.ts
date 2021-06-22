@@ -230,9 +230,18 @@ export class UsersService {
   }
 
   async deleteUser(user: User): Promise<void> {
-    // TODO: - Remove menus and images when deleting
     try {
       await user.remove()
+
+      if (user.profileImage) {
+        await this.filesService.deleteRemoteImage(user.profileImage.name)
+        await this.filesService.removeLocalImage(user.profileImage)
+      }
+
+      if (user.coverImage) {
+        await this.filesService.deleteRemoteImage(user.coverImage.name)
+        await this.filesService.removeLocalImage(user.coverImage)
+      }
     } catch (error) {
       throw new InternalServerErrorException(error, 'Failed deleting user')
     }

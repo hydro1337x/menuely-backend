@@ -55,9 +55,10 @@ export class OffersController {
   @UseGuards(RestaurantAccessJwtAuthGuard)
   @UsePipes(ValidationPipe)
   createMenu(
-    @Body() createMenuRequestDto: CreateMenuRequestDto
+    @Body() createMenuRequestDto: CreateMenuRequestDto,
+    @AuthenticatedEntity() restaurant: Restaurant
   ): Promise<MenuResponseDto> {
-    return this.offersService.createMenu(createMenuRequestDto)
+    return this.offersService.createMenu(createMenuRequestDto, restaurant)
   }
 
   @Patch('menus/:id')

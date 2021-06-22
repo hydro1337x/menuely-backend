@@ -20,6 +20,7 @@ import { ProductsRepository } from './repositories/products.repository'
     FilesModule
   ],
   controllers: [OffersController],
-  providers: [OffersService]
+  providers: [OffersService],
+  exports: [OffersService]
 })
 export class OffersModule {}

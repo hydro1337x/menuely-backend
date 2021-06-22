@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config'
 import appConfig from '../config/app.config'
 import { MailModule } from '../mail/mail.module'
 import { TokensModule } from '../tokens/tokens.module'
+import { OffersModule } from '../offers/offers.module'
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { TokensModule } from '../tokens/tokens.module'
     ConfigModule.forFeature(appConfig),
     FilesModule,
     MailModule,
-    TokensModule
+    TokensModule,
+    OffersModule
   ],
   controllers: [RestaurantsController],
   providers: [RestaurantsService],

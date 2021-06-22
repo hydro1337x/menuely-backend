@@ -1,5 +1,4 @@
 import { IsNumber, IsString, NotEquals } from 'class-validator'
-import { Transform } from 'class-transformer'
 
 export class CreateMenuRequestDto {
   @IsString()
@@ -10,9 +9,4 @@ export class CreateMenuRequestDto {
 
   @IsString()
   currency: string
-
-  @Transform((data) => parseInt(data.value))
-  @IsNumber()
-  @NotEquals(0)
-  restaurantId: number
 }

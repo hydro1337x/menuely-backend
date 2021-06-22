@@ -27,12 +27,14 @@ import { ConfigType } from '@nestjs/config'
 import appConfig from '../config/app.config'
 import { MailService } from '../mail/mail.service'
 import { TokensService } from '../tokens/tokens.service'
+import { OffersService } from '../offers/offers.service'
 
 @Injectable()
 export class RestaurantsService {
   constructor(
     @InjectRepository(RestaurantsRepository)
     private readonly restaurantsRepository: RestaurantsRepository,
+    private readonly offersService: OffersService,
     private readonly filesService: FilesService,
     private readonly mailService: MailService,
     private readonly tokensService: TokensService,
@@ -245,9 +247,24 @@ export class RestaurantsService {
   }
 
   async deleteRestaurant(restaurant: Restaurant): Promise<void> {
-    // TODO: - Remove menus and images when deleting
     try {
+      const menus = await this.offersService.findMenus(restaurant.id)
+
+      for (const menu of menus) {
+        await this.offersService.deleteMenu(menu.id, restaurant)
+      }
+
       await restaurant.remove()
+
+      if (restaurant.profileImage) {
+        await this.filesService.deleteRemoteImage(restaurant.profileImage.name)
+        await this.filesService.removeLocalImage(restaurant.profileImage)
+      }
+
+      if (restaurant.coverImage) {
+        await this.filesService.deleteRemoteImage(restaurant.coverImage.name)
+        await this.filesService.removeLocalImage(restaurant.coverImage)
+      }
     } catch (error) {
       throw new InternalServerErrorException(
         error,

@@ -24,6 +24,7 @@ import { UpdateCategoryRequestDto } from './dtos/update-category-request.dto'
 import { UpdateMenuRequestDto } from './dtos/update-menu-request.dto'
 import { Product } from './entities/product.entity'
 import { Restaurant } from '../restaurants/entities/restaurant.entity'
+import { Menu } from './entities/menu.entity'
 
 @Injectable()
 export class OffersService {
@@ -70,9 +71,10 @@ export class OffersService {
   }
 
   async createMenu(
-    createMenuRequestDto: CreateMenuRequestDto
+    createMenuRequestDto: CreateMenuRequestDto,
+    restaurant: Restaurant
   ): Promise<MenuResponseDto> {
-    const { name, description, currency, restaurantId } = createMenuRequestDto
+    const { name, description, currency } = createMenuRequestDto
 
     const queryRunner = this.connection.createQueryRunner()
     await queryRunner.connect()
@@ -84,7 +86,7 @@ export class OffersService {
         name,
         description,
         currency,
-        restaurantId
+        restaurantId: restaurant.id
       })
 
       await queryRunner.manager.save(menu)
@@ -644,5 +646,9 @@ export class OffersService {
     } finally {
       await queryRunner.release()
     }
+  }
+
+  async findMenus(restaurantId: number): Promise<Menu[]> {
+    return await this.menusRepository.findMenus(restaurantId)
   }
 }
