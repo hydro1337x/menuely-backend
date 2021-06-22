@@ -27,6 +27,7 @@ import { ConfigType } from '@nestjs/config'
 import { TokensService } from '../tokens/tokens.service'
 import { JwtPayload } from '../tokens/interfaces/jwt-payload.interface'
 import { JwtSignType } from '../tokens/enums/jwt-sign-type.enum'
+import { Restaurant } from '../restaurants/entities/restaurant.entity'
 
 @Injectable()
 export class UsersService {
@@ -227,6 +228,10 @@ export class UsersService {
     } finally {
       await queryRunner.release()
     }
+  }
+
+  async updateUserEmployer(employer: Restaurant, user: User): Promise<void> {
+    return await this.usersRepository.updateUserEmployer(employer, user)
   }
 
   async deleteUser(user: User): Promise<void> {

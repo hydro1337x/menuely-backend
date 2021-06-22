@@ -12,6 +12,7 @@ import {
 import { RefreshToken } from '../../tokens/entities/refresh-token.entity'
 import { Image } from '../../files/entities/image.entity'
 import { Menu } from '../../offers/entities/menu.entity'
+import { User } from '../../users/entities/user.entity'
 
 @Entity()
 export class Restaurant extends BaseEntity {
@@ -59,6 +60,9 @@ export class Restaurant extends BaseEntity {
 
   @OneToMany(() => Menu, (menu) => menu.restaurant, { nullable: true })
   menus: Menu[]
+
+  @OneToMany(() => User, (user) => user.employer, { nullable: true })
+  employees: User[]
 
   @OneToOne(() => Image, { nullable: true })
   @JoinColumn()

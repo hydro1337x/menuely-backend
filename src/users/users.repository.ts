@@ -10,6 +10,7 @@ import { UniqueSearchCriteria } from '../global/interfaces/unique-search-criteri
 import { FilterUserRequestDto } from './dtos/filter-user-request.dto'
 import { UpdateUserPasswordParams } from './interfaces/update-user-password-params.interface'
 import { CreateUserParams } from './interfaces/create-user-params.interface'
+import { Restaurant } from '../restaurants/entities/restaurant.entity'
 
 @EntityRepository(User)
 export class UsersRepository extends Repository<User> {
@@ -116,6 +117,19 @@ export class UsersRepository extends Repository<User> {
       throw new InternalServerErrorException(
         error,
         'Failed updating new user password'
+      )
+    }
+  }
+
+  async updateUserEmployer(employer: Restaurant, user: User): Promise<void> {
+    user.employer = employer
+
+    try {
+      await user.save()
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error,
+        'Failed updating user employer'
       )
     }
   }

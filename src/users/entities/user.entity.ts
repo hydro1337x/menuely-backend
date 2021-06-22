@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -11,6 +12,7 @@ import {
 } from 'typeorm'
 import { RefreshToken } from '../../tokens/entities/refresh-token.entity'
 import { Image } from '../../files/entities/image.entity'
+import { Restaurant } from '../../restaurants/entities/restaurant.entity'
 
 @Entity()
 export class User extends BaseEntity {
@@ -43,6 +45,9 @@ export class User extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date
+
+  @ManyToOne(() => Restaurant, (restaurant) => restaurant.employees)
+  employer: Restaurant
 
   @OneToOne(() => Image, { nullable: true })
   @JoinColumn()

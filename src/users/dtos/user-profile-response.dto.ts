@@ -1,5 +1,6 @@
 import { Expose, Transform, Type } from 'class-transformer'
 import { ImageResponseDto } from '../../files/dto/image-response.dto'
+import { RestaurantProfileResponseDto } from '../../restaurants/dtos/restaurant-profile-response.dto'
 
 export class UserProfileResponseDto {
   @Expose()
@@ -21,6 +22,10 @@ export class UserProfileResponseDto {
   @Expose()
   @Transform((data) => Math.floor(new Date(data.value).getTime() / 1000))
   updatedAt: number
+
+  @Expose()
+  @Type(() => RestaurantProfileResponseDto)
+  employer: RestaurantProfileResponseDto
 
   @Expose()
   @Type(() => ImageResponseDto)
