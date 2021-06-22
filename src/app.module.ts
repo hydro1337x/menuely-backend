@@ -12,6 +12,7 @@ import { MailModule } from './mail/mail.module'
 import { TokensModule } from './tokens/tokens.module'
 import { QrModule } from './qr/qr.module'
 import { OffersModule } from './offers/offers.module'
+import { InvitesModule } from './invites/invites.module';
 import databaseConfig from './database/config/database.config'
 import appConfig from './config/app.config'
 
@@ -43,7 +44,8 @@ import appConfig from './config/app.config'
     MailModule,
     TokensModule,
     QrModule,
-    OffersModule
+    OffersModule,
+    InvitesModule
   ],
   providers: [OrdersGateway]
 })

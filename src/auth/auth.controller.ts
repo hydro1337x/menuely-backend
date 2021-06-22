@@ -5,8 +5,6 @@ import {
   Get,
   HttpCode,
   Post,
-  Query,
-  Render,
   Res,
   UseGuards,
   ValidationPipe
