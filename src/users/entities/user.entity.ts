@@ -46,7 +46,9 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date
 
-  @ManyToOne(() => Restaurant, (restaurant) => restaurant.employees)
+  @ManyToOne(() => Restaurant, (restaurant) => restaurant.employees, {
+    nullable: true
+  })
   employer: Restaurant
 
   @OneToOne(() => Image, { nullable: true })

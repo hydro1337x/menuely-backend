@@ -28,6 +28,7 @@ import appConfig from '../config/app.config'
 import { MailService } from '../mail/mail.service'
 import { TokensService } from '../tokens/tokens.service'
 import { OffersService } from '../offers/offers.service'
+import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
 
 @Injectable()
 export class RestaurantsService {
@@ -83,6 +84,20 @@ export class RestaurantsService {
     )
 
     return restaurantProfileResponseDtos
+  }
+
+  async getEmployees(
+    restaurant: Restaurant
+  ): Promise<UserProfileResponseDto[]> {
+    const userProfileResponseDtos = plainToClass(
+      UserProfileResponseDto,
+      restaurant.employees,
+      {
+        excludeExtraneousValues: true
+      }
+    )
+
+    return userProfileResponseDtos
   }
 
   async createRestaurant(

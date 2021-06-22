@@ -1,5 +1,7 @@
 import { Expose, Transform, Type } from 'class-transformer'
 import { ImageResponseDto } from '../../files/dto/image-response.dto'
+import { UserProfileResponseDto } from '../../users/dtos/user-profile-response.dto'
+import { ValidateNested } from 'class-validator'
 
 export class RestaurantProfileResponseDto {
   @Expose()
@@ -33,6 +35,10 @@ export class RestaurantProfileResponseDto {
   @Expose()
   @Transform((data) => Math.floor(new Date(data.value).getTime() / 1000))
   updatedAt: number
+
+  @Expose()
+  @Type(() => UserProfileResponseDto)
+  employees: UserProfileResponseDto
 
   @Expose()
   @Type(() => ImageResponseDto)

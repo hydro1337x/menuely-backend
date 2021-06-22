@@ -24,6 +24,7 @@ import { RestaurantProfileResponseDto } from './dtos/restaurant-profile-response
 import { FileInterceptor } from '@nestjs/platform-express'
 import { UpdateRestaurantImageRequestDto } from './dtos/update-restaurant-image-request.dto'
 import { UpdateRestaurantEmailRequestDto } from './dtos/update-restaurant-email-request.dto'
+import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -50,6 +51,14 @@ export class RestaurantsController {
     filterRestaurantRequestDto: FilterRestaurantRequestDto
   ): Promise<RestaurantProfileResponseDto[]> {
     return this.restaurantsService.getRestaurants(filterRestaurantRequestDto)
+  }
+
+  @Get('me/employees')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  getEmployees(
+    @AuthenticatedEntity() restaurant: Restaurant
+  ): Promise<UserProfileResponseDto[]> {
+    return this.restaurantsService.getEmployees(restaurant)
   }
 
   @Patch('me/profile')

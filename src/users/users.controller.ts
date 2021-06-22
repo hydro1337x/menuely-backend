@@ -103,6 +103,12 @@ export class UsersController {
     )
   }
 
+  @Patch('me/quit-employer')
+  @UseGuards(UserAccessJwtAuthGuard)
+  quitEmployer(@AuthenticatedEntity() user: User): Promise<void> {
+    return this.usersService.quitEmployer(user)
+  }
+
   @Delete('me')
   @UseGuards(UserAccessJwtAuthGuard)
   deleteUser(@AuthenticatedEntity() user: User): Promise<void> {

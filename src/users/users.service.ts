@@ -234,6 +234,17 @@ export class UsersService {
     return await this.usersRepository.updateUserEmployer(employer, user)
   }
 
+  async quitEmployer(user: User): Promise<void> {
+    if (!user.employer) {
+      throw new BadRequestException(
+        'QuitEmployer',
+        'You are currently not employed'
+      )
+    }
+
+    return await this.usersRepository.updateUserEmployer(null, user)
+  }
+
   async deleteUser(user: User): Promise<void> {
     try {
       await user.remove()

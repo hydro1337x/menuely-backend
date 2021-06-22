@@ -55,8 +55,11 @@ export class UsersRepository extends Repository<User> {
       .leftJoinAndSelect('user.refreshTokens', 'refreshToken')
       .leftJoinAndSelect('user.profileImage', 'profileImage')
       .leftJoinAndSelect('user.coverImage', 'coverImage')
+      .leftJoinAndSelect('user.employer', 'employer')
+      .leftJoinAndSelect('employer.profileImage', 'employerProfileImage')
+      .leftJoinAndSelect('employer.coverImage', 'employerCoverImage')
       .getOne()
-
+    console.log(user)
     return user
   }
 
@@ -74,6 +77,9 @@ export class UsersRepository extends Repository<User> {
     const users = await query
       .leftJoinAndSelect('user.profileImage', 'profileImage')
       .leftJoinAndSelect('user.coverImage', 'coverImage')
+      .leftJoinAndSelect('user.employer', 'employer')
+      .leftJoinAndSelect('employer.profileImage', 'employerProfileImage')
+      .leftJoinAndSelect('employer.coverImage', 'employerCoverImage')
       .getMany()
 
     return users

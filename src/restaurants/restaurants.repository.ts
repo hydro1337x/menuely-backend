@@ -66,6 +66,9 @@ export class RestaurantsRepository extends Repository<Restaurant> {
       .leftJoinAndSelect('restaurant.refreshTokens', 'refreshToken')
       .leftJoinAndSelect('restaurant.profileImage', 'profileImage')
       .leftJoinAndSelect('restaurant.coverImage', 'coverImage')
+      .leftJoinAndSelect('restaurant.employees', 'employees')
+      .leftJoinAndSelect('employees.profileImage', 'employeeProfileImage')
+      .leftJoinAndSelect('employees.coverImage', 'employeeCoverImage')
       .getOne()
 
     return restaurant
@@ -87,6 +90,9 @@ export class RestaurantsRepository extends Repository<Restaurant> {
     const restaurants = await query
       .leftJoinAndSelect('restaurant.profileImage', 'profileImage')
       .leftJoinAndSelect('restaurant.coverImage', 'coverImage')
+      .leftJoinAndSelect('restaurant.employees', 'employees')
+      .leftJoinAndSelect('employees.profileImage', 'employeeProfileImage')
+      .leftJoinAndSelect('employees.coverImage', 'employeeCoverImage')
       .getMany()
 
     return restaurants
