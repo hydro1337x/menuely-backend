@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException
 } from '@nestjs/common'
@@ -25,6 +26,11 @@ import { UpdateMenuRequestDto } from './dtos/update-menu-request.dto'
 import { Product } from './entities/product.entity'
 import { Restaurant } from '../restaurants/entities/restaurant.entity'
 import { Menu } from './entities/menu.entity'
+import appConfig from '../config/app.config'
+import { ConfigType } from '@nestjs/config'
+import { Image } from '../files/entities/image.entity'
+import { UrlTableTuple } from '../mail/interfaces/url-table-tuple.interface'
+import { MailService } from '../mail/mail.service'
 
 @Injectable()
 export class OffersService {
@@ -37,7 +43,10 @@ export class OffersService {
     private readonly productsRepository: ProductsRepository,
     private readonly qrService: QrService,
     private readonly filesService: FilesService,
-    private readonly connection: Connection
+    private readonly mailService: MailService,
+    private readonly connection: Connection,
+    @Inject(appConfig.KEY)
+    private readonly appConfiguration: ConfigType<typeof appConfig>
   ) {}
 
   /**
@@ -74,7 +83,7 @@ export class OffersService {
     createMenuRequestDto: CreateMenuRequestDto,
     restaurant: Restaurant
   ): Promise<MenuResponseDto> {
-    const { name, description, currency } = createMenuRequestDto
+    const { name, description, currency, numberOfTables } = createMenuRequestDto
 
     const queryRunner = this.connection.createQueryRunner()
     await queryRunner.connect()
@@ -89,26 +98,51 @@ export class OffersService {
         restaurantId: restaurant.id
       })
 
-      await queryRunner.manager.save(menu)
       // In order for the id property to be defined, it is needed to first save the menu in the database
-      const imageFileParams = await this.qrService.generateQrCode(
-        menu.id.toString()
-      )
+      await queryRunner.manager.save(menu)
 
       // eslint-disable-next-line no-var
-      var image = await this.filesService.uploadImage(imageFileParams)
+      var qrCodeImages: Image[] = []
+      var urlTableTuples: UrlTableTuple[] = []
+      const baseUrl = this.appConfiguration.baseUrl
 
-      await queryRunner.manager.save(image)
-      menu.qrCodeImage = image
+      for (let tableNumber = 1; tableNumber <= numberOfTables; tableNumber++) {
+        const imageFileParams = await this.qrService.generateQrCode(
+          this.formatQrCodePayload(baseUrl, menu.id, tableNumber)
+        )
+
+        const qrCodeImage = await this.filesService.uploadImage(imageFileParams)
+
+        urlTableTuples.push({
+          url: qrCodeImage.url,
+          tableId: tableNumber.toString()
+        })
+
+        qrCodeImages.push(qrCodeImage)
+      }
+
+      await queryRunner.manager.save(qrCodeImages)
+      menu.qrCodeImages = qrCodeImages
       await queryRunner.manager.save(menu)
+
+      await this.mailService.sendQrCodes({
+        name: restaurant.name,
+        menu: menu.name,
+        email: restaurant.email,
+        urlTableTuples: urlTableTuples
+      })
 
       await queryRunner.commitTransaction()
     } catch (error) {
       await queryRunner.rollbackTransaction()
 
-      if (image) {
-        await this.filesService.deleteRemoteImage(image.name)
-        await this.filesService.removeLocalImage(image)
+      if (qrCodeImages) {
+        await this.filesService.deleteRemoteImages(
+          qrCodeImages.map((qrCodeImage) => {
+            return qrCodeImage.name
+          })
+        )
+        await this.filesService.removeLocalImages(qrCodeImages)
       }
 
       throw new ConflictException(error.message, 'Failed creating menu')
@@ -219,10 +253,16 @@ export class OffersService {
       for (const category of categories) {
         await this.deleteCategory(category.id, restaurant)
       }
-      const { name } = menu.qrCodeImage
+
+      const qrCodeImages = menu.qrCodeImages
       await this.menusRepository.remove(menu)
-      await this.filesService.removeLocalImage(menu.qrCodeImage)
-      await this.filesService.deleteRemoteImage(name)
+
+      await this.filesService.deleteRemoteImages(
+        qrCodeImages.map((qrCodeImage) => {
+          return qrCodeImage.name
+        })
+      )
+      await this.filesService.removeLocalImages(qrCodeImages)
 
       await queryRunner.commitTransaction()
     } catch (error) {
@@ -650,5 +690,23 @@ export class OffersService {
 
   async findMenus(restaurantId: number): Promise<Menu[]> {
     return await this.menusRepository.findMenus(restaurantId)
+  }
+
+  /**
+   *
+   * Helpers
+   *
+   */
+
+  formatQrCodePayload(
+    baseUrl: string,
+    menuId: number,
+    tableId: number
+  ): string {
+    const url = new URL(baseUrl)
+    url.searchParams.append('menuId', menuId.toString())
+    url.searchParams.append('tableId', tableId.toString())
+
+    return url.toString()
   }
 }

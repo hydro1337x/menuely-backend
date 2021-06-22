@@ -76,7 +76,28 @@ export class FilesService {
     await this.s3.deleteObject(deletionParams).promise()
   }
 
+  async deleteRemoteImages(names: string[]) {
+    const keys = names.map((name) => {
+      return {
+        Key: name
+      }
+    })
+
+    const deletionParams = {
+      Bucket: this.filesConfiguration.awsS3BucketName,
+      Delete: {
+        Objects: keys
+      }
+    }
+
+    await this.s3.deleteObjects(deletionParams).promise()
+  }
+
   async removeLocalImage(image: Image) {
     await this.imagesRepository.remove(image)
+  }
+
+  async removeLocalImages(images: Image[]) {
+    await this.imagesRepository.remove(images)
   }
 }

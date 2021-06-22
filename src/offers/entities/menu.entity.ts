@@ -37,9 +37,8 @@ export class Menu extends BaseEntity {
   @Column()
   restaurantId: number
 
-  @OneToOne(() => Image, { nullable: true })
-  @JoinColumn()
-  qrCodeImage: Image
+  @OneToMany(() => Image, (qrCodeImage) => qrCodeImage.menu, { nullable: true })
+  qrCodeImages: Image[]
 
   @ManyToOne(() => Restaurant, (restaurant) => restaurant.menus)
   restaurant: Restaurant

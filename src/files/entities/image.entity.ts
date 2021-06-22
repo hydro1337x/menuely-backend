@@ -3,11 +3,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
-import { Restaurant } from '../../restaurants/entities/restaurant.entity'
+import { Menu } from '../../offers/entities/menu.entity'
 
 @Entity()
 export class Image extends BaseEntity {
@@ -25,4 +25,7 @@ export class Image extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date
+
+  @ManyToOne(() => Menu, (menu) => menu.qrCodeImages)
+  menu: Menu
 }

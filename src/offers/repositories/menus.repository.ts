@@ -5,7 +5,7 @@ import { CreateMenuParams } from '../interfaces/create-menu-params.interface'
 @EntityRepository(Menu)
 export class MenusRepository extends Repository<Menu> {
   async findMenu(id: number): Promise<Menu> {
-    const menu = await this.findOne(id, { relations: ['qrCodeImage'] })
+    const menu = await this.findOne(id, { relations: ['qrCodeImages'] })
 
     return menu
   }
@@ -18,7 +18,7 @@ export class MenusRepository extends Repository<Menu> {
     }
 
     const menus = await query
-      .leftJoinAndSelect('menu.qrCodeImage', 'qrCodeImage')
+      .leftJoinAndSelect('menu.qrCodeImages', 'qrCodeImages')
       .leftJoinAndSelect('menu.restaurant', 'restaurant')
       .getMany()
 

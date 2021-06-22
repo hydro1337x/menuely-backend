@@ -1,0 +1,11 @@
+<p>Hello, {{ name }}</p>
+<p>Here are the URLs containing the QR codes for {{menu}} with their respective table number::</p>
+<p>
+{{#each urlTableTuples}}
+  <div class="row">
+    <div class="col-md-12">
+      <p>Table {{this.tableId}} - <a href="{{{this.url}}}"> <img src="{{{this.url}}}"></img> </a></p>
+    </div>
+  </div>
+{{/each}}
+</p>

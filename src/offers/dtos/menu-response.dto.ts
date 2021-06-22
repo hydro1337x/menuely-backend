@@ -21,8 +21,4 @@ export class MenuResponseDto {
   @Expose()
   @Transform((data) => Math.floor(new Date(data.value).getTime() / 1000))
   updatedAt: number
-
-  @Expose()
-  @Type(() => ImageResponseDto)
-  qrCodeImage: ImageResponseDto
 }

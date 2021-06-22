@@ -59,7 +59,7 @@ export class UsersRepository extends Repository<User> {
       .leftJoinAndSelect('employer.profileImage', 'employerProfileImage')
       .leftJoinAndSelect('employer.coverImage', 'employerCoverImage')
       .getOne()
-    console.log(user)
+
     return user
   }
 

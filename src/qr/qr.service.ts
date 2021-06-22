@@ -7,10 +7,11 @@ import { ImageFileParams } from '../files/interfaces/upload-file-params.interfac
 export class QrService {
   async generateQrCode(text: string): Promise<ImageFileParams> {
     let buffer: Buffer
+
     try {
       buffer = await qr.toBuffer(text, {
         type: 'png',
-        width: 500
+        width: 300
       })
     } catch (error) {
       throw new InternalServerErrorException(error, 'Failed generating QR code')
