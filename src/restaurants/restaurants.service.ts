@@ -269,6 +269,9 @@ export class RestaurantsService {
         await this.offersService.deleteMenu(menu.id, restaurant)
       }
 
+      restaurant.employees = null
+      await restaurant.save()
+
       await restaurant.remove()
 
       if (restaurant.profileImage) {

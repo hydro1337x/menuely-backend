@@ -85,6 +85,13 @@ export class OffersService {
   ): Promise<MenuResponseDto> {
     const { name, description, currency, numberOfTables } = createMenuRequestDto
 
+    if (numberOfTables > 25) {
+      throw new BadRequestException(
+        'CreateMenuRequestDto',
+        'Amount of specified tables is not supported'
+      )
+    }
+
     const queryRunner = this.connection.createQueryRunner()
     await queryRunner.connect()
     await queryRunner.startTransaction()
@@ -255,14 +262,13 @@ export class OffersService {
       }
 
       const qrCodeImages = menu.qrCodeImages
-      await this.menusRepository.remove(menu)
-
       await this.filesService.deleteRemoteImages(
         qrCodeImages.map((qrCodeImage) => {
           return qrCodeImage.name
         })
       )
       await this.filesService.removeLocalImages(qrCodeImages)
+      await this.menusRepository.remove(menu)
 
       await queryRunner.commitTransaction()
     } catch (error) {
