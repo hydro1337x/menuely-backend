@@ -1,5 +1,6 @@
 export interface SendVerificationEmailParams {
   email: string
   name: string
-  url: string
+  verificationUrl: string
+  resendUrl: string
 }

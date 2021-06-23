@@ -156,24 +156,7 @@ export class UsersService {
       )
     }
 
-    const payload: JwtPayload = { id: user.id }
-
-    const token = this.tokensService.signToken(
-      payload,
-      JwtSignType.VERIFICATION
-    )
-
-    const base = this.appConfiguration.baseUrl
-
-    const url = new URL(base + '/auth/verify/user')
-
-    url.searchParams.append('token', token)
-
-    await this.mailService.sendVerification({
-      email,
-      name: user.firstname,
-      url: url.toString()
-    })
+    await this.sendUserVerification(user)
   }
 
   async updateUserImage(
@@ -261,6 +244,29 @@ export class UsersService {
     } catch (error) {
       throw new InternalServerErrorException(error, 'Failed deleting user')
     }
+  }
+
+  async sendUserVerification(user: User): Promise<void> {
+    const payload: JwtPayload = { id: user.id }
+
+    const token = this.tokensService.signToken(
+      payload,
+      JwtSignType.VERIFICATION
+    )
+
+    const verificationUrl = new URL(this.appConfiguration.verifyUserUrl)
+    verificationUrl.searchParams.append('token', token)
+
+    const resendUrl = new URL(
+      this.appConfiguration.resendUserVerificationUrl + `${user.id}`
+    )
+
+    await this.mailService.sendVerification({
+      email: user.email,
+      name: user.firstname,
+      verificationUrl: verificationUrl.toString(),
+      resendUrl: resendUrl.toString()
+    })
   }
 
   formatUserProfileResponse(user: User): UserProfileResponseDto {

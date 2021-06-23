@@ -2,7 +2,8 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
-  InternalServerErrorException
+  InternalServerErrorException,
+  NotFoundException
 } from '@nestjs/common'
 import { User } from '../users/entities/user.entity'
 import { UsersService } from '../users/users.service'
@@ -15,7 +16,7 @@ import { RestaurantsService } from '../restaurants/restaurants.service'
 import { RestaurantRegistrationCredentialsDto } from './dtos/restaurant-registration-credentials.dto'
 import { RestaurantAuthResponseDto } from './dtos/restaurant-auth-response.dto'
 import { ConfigType } from '@nestjs/config'
-import authConfig from '../auth/config/auth.config'
+import appConfig from '../config/app.config'
 import * as bcrypt from 'bcrypt'
 import * as crypto from 'crypto'
 import { TokensResponseDto } from './dtos/tokens-response.dto'
@@ -35,8 +36,8 @@ export class AuthService {
     private readonly restaurantsService: RestaurantsService,
     private readonly mailService: MailService,
     private readonly tokensService: TokensService,
-    @Inject(authConfig.KEY)
-    private readonly authConfiguration: ConfigType<typeof authConfig>
+    @Inject(appConfig.KEY)
+    private readonly appConfiguration: ConfigType<typeof appConfig>
   ) {}
 
   async registerUser(
@@ -46,24 +47,7 @@ export class AuthService {
       userRegistrationCredentialsDto
     )
 
-    const { email, firstname } = userRegistrationCredentialsDto
-
-    const payload: JwtPayload = { id: user.id }
-
-    const token = this.tokensService.signToken(
-      payload,
-      JwtSignType.VERIFICATION
-    )
-
-    const url = new URL(this.authConfiguration.verifyUserUrl)
-
-    url.searchParams.append('token', token)
-
-    await this.mailService.sendVerification({
-      email,
-      name: firstname,
-      url: url.toString()
-    })
+    await this.usersService.sendUserVerification(user)
 
     return { message: 'Successfully registered' }
   }
@@ -115,24 +99,7 @@ export class AuthService {
       restaurantRegistrationCredentialsDto
     )
 
-    const { email, name } = restaurantRegistrationCredentialsDto
-
-    const payload: JwtPayload = { id: restaurant.id }
-
-    const token = this.tokensService.signToken(
-      payload,
-      JwtSignType.VERIFICATION
-    )
-
-    const url = new URL(this.authConfiguration.verifyRestaurantUrl)
-
-    url.searchParams.append('token', token)
-
-    await this.mailService.sendVerification({
-      email,
-      name: name,
-      url: url.toString()
-    })
+    await this.restaurantsService.sendRestaurantVerification(restaurant)
 
     return { message: 'Successfully registered' }
   }
@@ -486,6 +453,29 @@ export class AuthService {
       title: 'Email Verification',
       message: 'You are successfully verified your email!'
     }
+  }
+
+  async resendUserVerification(id: number): Promise<void> {
+    const user = await this.usersService.findUser({ id })
+
+    if (!user) {
+      throw new NotFoundException('ResendUserVerification', 'User not found')
+    }
+
+    await this.usersService.sendUserVerification(user)
+  }
+
+  async resendRestaurantVerification(id: number): Promise<void> {
+    const restaurant = await this.restaurantsService.findRestaurant({ id })
+
+    if (!restaurant) {
+      throw new NotFoundException(
+        'ResendRestaurantVerification',
+        'Restaurant not found'
+      )
+    }
+
+    await this.restaurantsService.sendRestaurantVerification(restaurant)
   }
 
   async logout(refreshToken: string): Promise<void> {

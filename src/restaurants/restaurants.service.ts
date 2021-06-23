@@ -182,24 +182,7 @@ export class RestaurantsService {
       )
     }
 
-    const payload: JwtPayload = { id: restaurant.id }
-
-    const token = this.tokensService.signToken(
-      payload,
-      JwtSignType.VERIFICATION
-    )
-
-    const base = this.appConfiguration.baseUrl
-
-    const url = new URL(base + '/auth/verify/restaurant')
-
-    url.searchParams.append('token', token)
-
-    await this.mailService.sendVerification({
-      email,
-      name: restaurant.name,
-      url: url.toString()
-    })
+    await this.sendRestaurantVerification(restaurant)
   }
 
   async updateRestaurantImage(
@@ -289,6 +272,29 @@ export class RestaurantsService {
         'Failed deleting restaurant'
       )
     }
+  }
+
+  async sendRestaurantVerification(restaurant: Restaurant): Promise<void> {
+    const payload: JwtPayload = { id: restaurant.id }
+
+    const token = this.tokensService.signToken(
+      payload,
+      JwtSignType.VERIFICATION
+    )
+
+    const verificationUrl = new URL(this.appConfiguration.verifyRestaurantUrl)
+    verificationUrl.searchParams.append('token', token)
+
+    const resendUrl = new URL(
+      this.appConfiguration.resendRestaurantVerificationUrl + `${restaurant.id}`
+    )
+
+    await this.mailService.sendVerification({
+      email: restaurant.email,
+      name: restaurant.name,
+      verificationUrl: verificationUrl.toString(),
+      resendUrl: resendUrl.toString()
+    })
   }
 
   formatRestaurantProfileResponse(

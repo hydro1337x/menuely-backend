@@ -27,7 +27,8 @@ export class MailService {
   async sendVerification(
     sendVerificationEmailParams: SendVerificationEmailParams
   ): Promise<void> {
-    const { email, name, url } = sendVerificationEmailParams
+    const { email, name, verificationUrl, resendUrl } =
+      sendVerificationEmailParams
 
     await this.mailerService.sendMail({
       to: email,
@@ -35,7 +36,8 @@ export class MailService {
       template: './verification',
       context: {
         name,
-        url
+        verificationUrl,
+        resendUrl
       }
     })
   }

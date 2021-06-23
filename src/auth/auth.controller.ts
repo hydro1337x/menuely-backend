@@ -4,8 +4,11 @@ import {
   Delete,
   Get,
   HttpCode,
+  Param,
+  ParseIntPipe,
   Post,
   Res,
+  UseFilters,
   UseGuards,
   ValidationPipe
 } from '@nestjs/common'
@@ -26,6 +29,7 @@ import { ResetPasswordRequestDto } from './dtos/reset-password-request.dto'
 import { UserVerificationJwtAuthGuard } from './guards/user-verification-jwt-auth.guard'
 import { RestaurantVerificationJwtAuthGuard } from './guards/restaurant-verification-jwt-auth.guard'
 import { Response } from 'express'
+import { UnauthorizedVerificationExceptionFilter } from './filters/unauthorized-verification-exception.filter'
 
 @Controller('auth')
 export class AuthController {
@@ -90,17 +94,19 @@ export class AuthController {
 
   @Get('verify/user')
   @UseGuards(UserVerificationJwtAuthGuard)
+  @UseFilters(UnauthorizedVerificationExceptionFilter)
   async verifyUser(
     @Res() response: Response,
     @AuthenticatedEntity() user: User
   ): Promise<void> {
     const verifyResponseDto = await this.authService.verifyUser(user)
 
-    return response.render('verified', verifyResponseDto)
+    return response.render('success', verifyResponseDto)
   }
 
   @Get('verify/restaurant')
   @UseGuards(RestaurantVerificationJwtAuthGuard)
+  @UseFilters(UnauthorizedVerificationExceptionFilter)
   async verifyRestaurant(
     @Res() response: Response,
     @AuthenticatedEntity() restaurant: Restaurant
@@ -109,7 +115,29 @@ export class AuthController {
       restaurant
     )
 
-    return response.render('verified', verifyResponseDto)
+    return response.render('success', verifyResponseDto)
+  }
+
+  @Get('resend-verification/user/:id')
+  async resendUserVerification(
+    @Res() response: Response,
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<void> {
+    await this.authService.resendUserVerification(id)
+    return response.render('success', {
+      message: 'Successfully resent verification email'
+    })
+  }
+
+  @Get('resend-verification/restaurant/:id')
+  async resendRestaurantVerification(
+    @Res() response: Response,
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<void> {
+    await this.authService.resendRestaurantVerification(id)
+    return response.render('success', {
+      message: 'Successfully resent verification email'
+    })
   }
 
   @Delete('logout')
