@@ -448,7 +448,10 @@ export class AuthService {
 
   async verifyUser(user: User): Promise<VerifyResponseDto> {
     if (user.isVerified) {
-      return { message: 'Already verified' }
+      return {
+        title: 'Email Verification',
+        message: 'You are already verified!'
+      }
     }
     user.isVerified = true
 
@@ -458,12 +461,18 @@ export class AuthService {
       throw new InternalServerErrorException(error, 'Failed verifying user')
     }
 
-    return { message: 'Successfully verified email' }
+    return {
+      title: 'Email Verification',
+      message: 'You are successfully verified your email!'
+    }
   }
 
   async verifyRestaurant(restaurant: Restaurant): Promise<VerifyResponseDto> {
     if (restaurant.isVerified) {
-      return { message: 'Already verified' }
+      return {
+        title: 'Email Verification',
+        message: 'You are already verified!'
+      }
     }
 
     restaurant.isVerified = true
@@ -477,7 +486,10 @@ export class AuthService {
       )
     }
 
-    return { message: 'Successfully verified email' }
+    return {
+      title: 'Email Verification',
+      message: 'You are successfully verified your email!'
+    }
   }
 
   async logout(refreshToken: string): Promise<void> {
