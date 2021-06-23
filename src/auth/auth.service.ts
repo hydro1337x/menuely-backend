@@ -15,7 +15,7 @@ import { RestaurantsService } from '../restaurants/restaurants.service'
 import { RestaurantRegistrationCredentialsDto } from './dtos/restaurant-registration-credentials.dto'
 import { RestaurantAuthResponseDto } from './dtos/restaurant-auth-response.dto'
 import { ConfigType } from '@nestjs/config'
-import appConfig from '../config/app.config'
+import authConfig from '../auth/config/auth.config'
 import * as bcrypt from 'bcrypt'
 import * as crypto from 'crypto'
 import { TokensResponseDto } from './dtos/tokens-response.dto'
@@ -35,8 +35,8 @@ export class AuthService {
     private readonly restaurantsService: RestaurantsService,
     private readonly mailService: MailService,
     private readonly tokensService: TokensService,
-    @Inject(appConfig.KEY)
-    private readonly appConfiguration: ConfigType<typeof appConfig>
+    @Inject(authConfig.KEY)
+    private readonly authConfiguration: ConfigType<typeof authConfig>
   ) {}
 
   async registerUser(
@@ -55,9 +55,7 @@ export class AuthService {
       JwtSignType.VERIFICATION
     )
 
-    const base = this.appConfiguration.baseUrl
-
-    const url = new URL(base + '/auth/verify/user')
+    const url = new URL(this.authConfiguration.verifyUserUrl)
 
     url.searchParams.append('token', token)
 
@@ -126,9 +124,7 @@ export class AuthService {
       JwtSignType.VERIFICATION
     )
 
-    const base = this.appConfiguration.baseUrl
-
-    const url = new URL(base + '/auth/verify/restaurant')
+    const url = new URL(this.authConfiguration.verifyRestaurantUrl)
 
     url.searchParams.append('token', token)
 
