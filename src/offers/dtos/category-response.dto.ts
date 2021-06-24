@@ -12,6 +12,9 @@ export class CategoryResponseDto {
   currency: string
 
   @Expose()
+  restaurantId: number
+
+  @Expose()
   menuId: number
 
   @Expose()

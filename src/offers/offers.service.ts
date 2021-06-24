@@ -143,7 +143,7 @@ export class OffersService {
     } catch (error) {
       await queryRunner.rollbackTransaction()
 
-      if (qrCodeImages) {
+      if (qrCodeImages.length > 0) {
         await this.filesService.deleteRemoteImages(
           qrCodeImages.map((qrCodeImage) => {
             return qrCodeImage.name
@@ -696,6 +696,10 @@ export class OffersService {
 
   async findMenus(restaurantId: number): Promise<Menu[]> {
     return await this.menusRepository.findMenus(restaurantId)
+  }
+
+  async findProduct(id: number): Promise<Product> {
+    return await this.productsRepository.findOne(id)
   }
 
   /**

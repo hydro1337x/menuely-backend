@@ -15,6 +15,9 @@ export class MenuResponseDto {
   currency: string
 
   @Expose()
+  restaurantId: number
+
+  @Expose()
   @Transform((data) => Math.floor(new Date(data.value).getTime() / 1000))
   createdAt: number
 
