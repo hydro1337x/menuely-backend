@@ -18,16 +18,25 @@ export class Order extends BaseEntity {
   restaurantId: number
 
   @Column()
+  employerName: string
+
+  @Column()
+  customerName: string
+
+  @Column({ nullable: true })
+  employeeName: string
+
+  @Column()
+  userId: number
+
+  @Column()
   tableId: number
 
   @Column({ type: 'float' })
   totalPrice: number
 
   @Column()
-  client: string
-
-  @Column({ default: false })
-  isAccepted: boolean
+  currency: string
 
   @CreateDateColumn()
   createdAt: Date

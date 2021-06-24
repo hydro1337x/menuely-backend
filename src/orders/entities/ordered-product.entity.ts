@@ -3,11 +3,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm'
 import { Order } from './order.entity'
+import { Image } from '../../files/entities/image.entity'
 
 @Entity()
 export class OrderedProduct extends BaseEntity {
@@ -25,6 +28,9 @@ export class OrderedProduct extends BaseEntity {
 
   @Column({ type: 'float' })
   price: number
+
+  @Column()
+  imageUrl: string
 
   @Column()
   description: string

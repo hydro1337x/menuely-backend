@@ -1,4 +1,4 @@
-import { OrderedProductParamsDto } from './ordered-product-params.dto'
+import { CreateOrderedProductRequestDto } from './create-ordered-product-request.dto'
 import { Transform, Type } from 'class-transformer'
 import {
   ArrayMinSize,
@@ -27,6 +27,6 @@ export class CreateOrderRequestDto {
   @IsArray()
   @ValidateNested({ each: true })
   @ArrayMinSize(1)
-  @Type(() => OrderedProductParamsDto)
-  orderedProducts: [OrderedProductParamsDto]
+  @Type(() => CreateOrderedProductRequestDto)
+  orderedProducts: CreateOrderedProductRequestDto[]
 }

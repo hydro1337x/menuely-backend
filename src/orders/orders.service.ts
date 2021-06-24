@@ -1,7 +1,9 @@
 import {
   BadRequestException,
   ConflictException,
-  Injectable
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException
 } from '@nestjs/common'
 import { CreateOrderRequestDto } from './dtos/create-order-request.dto'
 import { UsersService } from '../users/users.service'
@@ -15,6 +17,11 @@ import { UrlTableTuple } from '../mail/interfaces/url-table-tuple.interface'
 import { OffersService } from '../offers/offers.service'
 import { User } from '../users/entities/user.entity'
 import { Product } from '../offers/entities/product.entity'
+import { UserOrderResponseDto } from './dtos/user-order-response.dto'
+import { plainToClass } from 'class-transformer'
+import { ProductResponseDto } from '../offers/dtos/product-response.dto'
+import { RestaurantOrderResponseDto } from './dtos/restaurant-order-response.dto'
+import { AcceptOrderRequestDto } from './dtos/accept-order-request.dto'
 
 @Injectable()
 export class OrdersService {
@@ -109,18 +116,26 @@ export class OrdersService {
           )
           orderedProductEntity.name = productEntities[index].name
           orderedProductEntity.description = productEntities[index].description
+          orderedProductEntity.imageUrl = productEntities[index].image.url
           return orderedProductEntity
         }
       )
 
       await queryRunner.manager.save(orderedProductEntites)
 
+      const restaurant = await this.restaurantsService.findRestaurant({
+        id: productEntities[0].restaurantId
+      })
+      const currency = productEntities[0].currency
       const orderEntity = this.ordersRepository.create()
       orderEntity.restaurantId = restaurantId
+      orderEntity.userId = user.id
       orderEntity.tableId = tableId
       orderEntity.orderedProducts = orderedProductEntites
       orderEntity.totalPrice = calculatedTotal
-      orderEntity.client = `${user.firstname} ${user.lastname}`
+      orderEntity.currency = currency
+      orderEntity.employerName = restaurant.name
+      orderEntity.customerName = `${user.firstname} ${user.lastname}`
 
       await queryRunner.manager.save(orderEntity)
 
@@ -132,6 +147,141 @@ export class OrdersService {
     } finally {
       await queryRunner.release()
     }
+
+    // Emit socket event
+  }
+
+  async getUserOrder(id: number, user: User): Promise<UserOrderResponseDto> {
+    const order = await this.ordersRepository.findOrder(id)
+
+    if (!order) {
+      throw new NotFoundException(
+        'UserOrderResponseDto',
+        'Order does not exist'
+      )
+    }
+
+    if (order.userId !== user.id) {
+      throw new BadRequestException(
+        'UserOrderResponseDto',
+        'The order you are trying to access does not belong to you'
+      )
+    }
+
+    const userOrderResponseDto = plainToClass(UserOrderResponseDto, order, {
+      excludeExtraneousValues: true
+    })
+
+    return userOrderResponseDto
+  }
+
+  async getUserOrders(user): Promise<UserOrderResponseDto[]> {
+    const orders = await this.ordersRepository.findUserOrders(user.id)
+
+    const userOrderResponseDtos = plainToClass(UserOrderResponseDto, orders, {
+      excludeExtraneousValues: true
+    })
+
+    return userOrderResponseDtos
+  }
+
+  async getRestaurantOrder(
+    id: number,
+    employee: User
+  ): Promise<RestaurantOrderResponseDto> {
+    if (!employee.employer) {
+      throw new BadRequestException(
+        'RestaurantOrderResponseDto',
+        'Not employed'
+      )
+    }
+
+    const order = await this.ordersRepository.findOrder(id)
+
+    if (!order) {
+      throw new NotFoundException(
+        'RestaurantOrderResponseDto',
+        'Order does not exist'
+      )
+    }
+
+    if (employee.employer.id !== order.restaurantId) {
+      throw new BadRequestException(
+        'RestaurantOrderResponseDto',
+        'The order you are trying to access does not belong to you'
+      )
+    }
+
+    const restaurantOrderResponseDto = plainToClass(
+      RestaurantOrderResponseDto,
+      order,
+      {
+        excludeExtraneousValues: true
+      }
+    )
+
+    return restaurantOrderResponseDto
+  }
+
+  async getRestaurantOrders(
+    employee: User
+  ): Promise<RestaurantOrderResponseDto[]> {
+    if (!employee.employer) {
+      throw new BadRequestException(
+        'RestaurantOrderResponseDto',
+        'Not employed'
+      )
+    }
+
+    const restaurantId = employee.employer.id
+
+    const orders = await this.ordersRepository.findRestaurantOrders(
+      restaurantId
+    )
+
+    const restaurantOrderResponseDtos = plainToClass(
+      RestaurantOrderResponseDto,
+      orders,
+      {
+        excludeExtraneousValues: true
+      }
+    )
+
+    return restaurantOrderResponseDtos
+  }
+
+  async acceptOrder(
+    acceptOrderRequestDto: AcceptOrderRequestDto,
+    employee: User
+  ): Promise<void> {
+    if (!employee.employer) {
+      throw new BadRequestException('AcceptOrderRequestDto', 'Not employed')
+    }
+
+    const { orderId } = acceptOrderRequestDto
+
+    const order = await this.ordersRepository.findOrder(orderId)
+
+    if (!order) {
+      throw new NotFoundException('AcceptOrderRequestDto', 'Order not found')
+    }
+
+    if (employee.employer.id !== order.restaurantId) {
+      throw new BadRequestException(
+        'AcceptOrderRequestDto',
+        'The order you are trying to access does not belong to you'
+      )
+    }
+
+    order.employeeName = `${employee.firstname} ${employee.lastname}`
+
+    try {
+      await order.save()
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Failed accepting order')
+    }
+
+    // Emit socket event
   }
 
   roundToTwoDecimals(number: number): number {

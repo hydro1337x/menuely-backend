@@ -699,7 +699,7 @@ export class OffersService {
   }
 
   async findProduct(id: number): Promise<Product> {
-    return await this.productsRepository.findOne(id)
+    return await this.productsRepository.findProduct(id)
   }
 
   /**

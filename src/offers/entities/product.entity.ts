@@ -41,6 +41,7 @@ export class Product extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date
 
+  // It was OneToOne
   @OneToOne(() => Image)
   @JoinColumn()
   image: Image
