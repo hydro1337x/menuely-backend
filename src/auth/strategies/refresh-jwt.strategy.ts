@@ -1,4 +1,4 @@
-import { Inject, Injectable, Req } from '@nestjs/common'
+import { Inject, Injectable, Req, UnauthorizedException } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 import { StrategyType } from '../enums/strategy-type.enum'
@@ -40,6 +40,10 @@ export class RefreshJwtStrategy extends PassportStrategy(
 
     const restaurantTokenTouple =
       await this.authService.validateRestaurantRefreshToken(refreshToken, id)
+
+    if (!userTokenTouple?.token && !restaurantTokenTouple?.token) {
+      throw new UnauthorizedException('Entity refresh token not found')
+    }
 
     request.refreshToken = userTokenTouple
       ? userTokenTouple.token

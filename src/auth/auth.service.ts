@@ -177,7 +177,7 @@ export class AuthService {
   ): Promise<EntityTokenTuple | undefined | null> {
     const user = await this.usersService.findUser({ id })
 
-    if (!user) {
+    if (!user?.refreshTokenSalt) {
       return null
     }
 
@@ -205,7 +205,7 @@ export class AuthService {
   ): Promise<EntityTokenTuple | undefined | null> {
     const restaurant = await this.restaurantsService.findRestaurant({ id })
 
-    if (!restaurant) {
+    if (!restaurant?.refreshTokenSalt) {
       return null
     }
 
