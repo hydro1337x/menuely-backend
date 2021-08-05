@@ -115,7 +115,7 @@ export class OffersService {
 
       for (let tableNumber = 1; tableNumber <= numberOfTables; tableNumber++) {
         const imageFileParams = await this.qrService.generateQrCode(
-          this.formatQrCodePayload(baseUrl, menu.id, tableNumber)
+          this.formatQrCodePayload(baseUrl, restaurant.id, tableNumber)
         )
 
         const qrCodeImage = await this.filesService.uploadImage(imageFileParams)
@@ -722,11 +722,11 @@ export class OffersService {
 
   formatQrCodePayload(
     baseUrl: string,
-    menuId: number,
+    restaurantId: number,
     tableId: number
   ): string {
     const url = new URL(baseUrl)
-    url.searchParams.append('menuId', menuId.toString())
+    url.searchParams.append('restaurantId', restaurantId.toString())
     url.searchParams.append('tableId', tableId.toString())
 
     return url.toString()
