@@ -82,8 +82,8 @@ export class RestaurantsRepository extends Repository<Restaurant> {
 
     if (search) {
       query.where(
-        '(restaurant.name LIKE :search OR restaurant.email LIKE :search OR restaurant.country LIKE :search OR restaurant.city LIKE :search OR restaurant.address LIKE :search OR restaurant.postalCode LIKE :search)',
-        { search: `%${search}%` }
+        '(LOWER(restaurant.name) LIKE :search OR LOWER(restaurant.email) LIKE :search OR LOWER(restaurant.country) LIKE :search OR LOWER(restaurant.city) LIKE :search OR LOWER(restaurant.address) LIKE :search OR LOWER(restaurant.postalCode) LIKE :search)',
+        { search: `%${search.toLowerCase()}%` }
       )
     }
 

@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsOptional, IsString } from 'class-validator'
 
 export class UpdateMenuRequestDto {
   @IsOptional()
@@ -12,4 +12,8 @@ export class UpdateMenuRequestDto {
   @IsOptional()
   @IsString()
   currency: string
+
+  @IsOptional()
+  @IsBoolean()
+  isActive: boolean
 }

@@ -18,6 +18,9 @@ export class MenuResponseDto {
   restaurantId: number
 
   @Expose()
+  isActive: boolean
+
+  @Expose()
   @Transform((data) => Math.floor(new Date(data.value).getTime() / 1000))
   createdAt: number
 

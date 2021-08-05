@@ -69,8 +69,8 @@ export class UsersRepository extends Repository<User> {
 
     if (search) {
       query.where(
-        '(user.email LIKE :search OR user.firstname LIKE :search OR user.lastname LIKE :search)',
-        { search: `%${search}%` }
+        '(LOWER(user.email) LIKE :search OR LOWER(user.firstname) LIKE :search OR LOWER(user.lastname) LIKE :search)',
+        { search: `%${search.toLowerCase()}%` }
       )
     }
 

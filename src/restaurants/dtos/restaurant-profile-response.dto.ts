@@ -29,6 +29,9 @@ export class RestaurantProfileResponseDto {
   postalCode: string
 
   @Expose()
+  activeMenuId: number
+
+  @Expose()
   @Transform((data) => Math.floor(new Date(data.value).getTime() / 1000))
   createdAt: number
 

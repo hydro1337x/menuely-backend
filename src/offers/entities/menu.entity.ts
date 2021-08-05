@@ -37,6 +37,9 @@ export class Menu extends BaseEntity {
   @Column()
   restaurantId: number
 
+  @Column({ default: false })
+  isActive: boolean
+
   @OneToMany(() => Image, (qrCodeImage) => qrCodeImage.menu, { nullable: true })
   qrCodeImages: Image[]
 

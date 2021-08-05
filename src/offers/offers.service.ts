@@ -169,9 +169,9 @@ export class OffersService {
     updateMenuRequestDto: UpdateMenuRequestDto,
     restaurant: Restaurant
   ): Promise<void> {
-    const { name, description, currency } = updateMenuRequestDto
+    const { name, description, currency, isActive } = updateMenuRequestDto
 
-    if (!name && !description && !currency) {
+    if (!name && !description && !currency && !isActive) {
       throw new BadRequestException(
         'UpdateMenuRequestDto',
         'At least one field needs to be provided'
@@ -202,6 +202,18 @@ export class OffersService {
 
       if (description) {
         menu.description = description
+      }
+
+      if (isActive) {
+        const menus = await this.menusRepository.findMenus(restaurant.id)
+
+        for (const menu of menus) {
+          menu.isActive = false
+        }
+
+        await queryRunner.manager.save(menus)
+
+        menu.isActive = isActive
       }
 
       if (currency) {
