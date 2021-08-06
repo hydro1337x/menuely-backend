@@ -204,7 +204,7 @@ export class OffersService {
         menu.description = description
       }
 
-      if (isActive) {
+      if (isActive !== null) {
         const menus = await this.menusRepository.findMenus(restaurant.id)
 
         for (const menu of menus) {
@@ -214,6 +214,10 @@ export class OffersService {
         await queryRunner.manager.save(menus)
 
         menu.isActive = isActive
+
+        restaurant.activeMenuId = isActive === true ? menu.id : null
+
+        await queryRunner.manager.save(restaurant)
       }
 
       if (currency) {
