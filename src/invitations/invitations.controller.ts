@@ -17,6 +17,7 @@ import { InvitationResponseDto } from './dtos/invitation-response.dto'
 import { UserAccessJwtAuthGuard } from '../auth/guards/user-access-jwt-auth.guard'
 import { User } from '../users/entities/user.entity'
 import { AcceptInvitationRequestDto } from './dtos/accept-invitation-request.dto'
+import { RejectInvitationRequestDto } from './dtos/reject-invitation-request.dto'
 
 @Controller('invitations')
 export class InvitationsController {
@@ -53,6 +54,19 @@ export class InvitationsController {
     return this.invitationsService.createInvitation(
       createInvitationRequestDto,
       restaurant
+    )
+  }
+
+  @Post('reject')
+  @UseGuards(AccessJwtAuthGuard)
+  @UsePipes(ValidationPipe)
+  rejectInvitation(
+    @Body() rejectInvitationRequestDto: RejectInvitationRequestDto,
+    @AuthenticatedEntity() entity
+  ): Promise<void> {
+    return this.invitationsService.rejectInvitation(
+      rejectInvitationRequestDto,
+      entity
     )
   }
 }

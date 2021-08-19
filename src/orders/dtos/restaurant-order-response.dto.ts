@@ -18,6 +18,9 @@ export class RestaurantOrderResponseDto {
   tableId: number
 
   @Expose()
+  employeeName: string
+
+  @Expose()
   @Transform((data) => Math.floor(new Date(data.value).getTime() / 1000))
   createdAt: number
 

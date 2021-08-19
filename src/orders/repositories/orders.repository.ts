@@ -17,6 +17,9 @@ export class OrdersRepository extends Repository<Order> {
       query.where('order.userId = :userId', { userId })
     }
 
+    // query.orderBy('order.createdAt', 'DESC')
+    query.orderBy('order.updatedAt', 'ASC')
+
     const orders = await query
       .leftJoinAndSelect('order.orderedProducts', 'orderedProducts')
       .getMany()
@@ -30,6 +33,8 @@ export class OrdersRepository extends Repository<Order> {
     if (restaurantId) {
       query.where('order.restaurantId = :restaurantId', { restaurantId })
     }
+
+    query.orderBy('order.updatedAt', 'ASC')
 
     const orders = await query
       .leftJoinAndSelect('order.orderedProducts', 'orderedProducts')

@@ -14,6 +14,11 @@ import { plainToClass } from 'class-transformer'
 import { AcceptInvitationRequestDto } from './dtos/accept-invitation-request.dto'
 import { UsersService } from '../users/users.service'
 import { RestaurantsService } from '../restaurants/restaurants.service'
+import { MenuResponseDto } from '../offers/dtos/menu-response.dto'
+import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
+import { RestaurantProfileResponseDto } from '../restaurants/dtos/restaurant-profile-response.dto'
+import { RejectInvitationRequestDto } from './dtos/reject-invitation-request.dto'
+import Any = jasmine.Any
 
 @Injectable()
 export class InvitationsService {
@@ -35,13 +40,37 @@ export class InvitationsService {
       invitations = await this.getRestaurantInvitations(entity)
     }
 
-    const invitationResponseDtos = plainToClass(
-      InvitationResponseDto,
-      invitations,
-      {
+    let invitationResponseDtos: InvitationResponseDto[] = []
+
+    for (const invitation of invitations) {
+      const user = await this.usersService.findUser({
+        id: invitation.employeeId
+      })
+
+      const restaurant = await this.restaurantsService.findRestaurant({
+        id: invitation.employerId
+      })
+
+      const invitationResponseDto = new InvitationResponseDto()
+      invitationResponseDto.id = invitation.id
+
+      const userResponseDto = plainToClass(UserProfileResponseDto, user, {
         excludeExtraneousValues: true
-      }
-    )
+      })
+
+      const restaurantResponseDto = plainToClass(
+        RestaurantProfileResponseDto,
+        restaurant,
+        {
+          excludeExtraneousValues: true
+        }
+      )
+
+      invitationResponseDto.employee = userResponseDto
+      invitationResponseDto.employer = restaurantResponseDto
+
+      invitationResponseDtos.push(invitationResponseDto)
+    }
 
     return invitationResponseDtos
   }
@@ -118,7 +147,7 @@ export class InvitationsService {
 
     if (!employee) {
       throw new BadRequestException(
-        'AcceptInviCreateInvitationRequestDtotationRequestDto',
+        'CreateInvitationRequestDto',
         'Employee not found'
       )
     }
@@ -129,5 +158,44 @@ export class InvitationsService {
     })
 
     await invitation.save()
+  }
+
+  async rejectInvitation(
+    rejectInvitationRequestDto: RejectInvitationRequestDto,
+    entity: any
+  ) {
+    const invitation = await this.invitationsRepository.findOne({
+      id: rejectInvitationRequestDto.invitationId
+    })
+
+    if (!invitation) {
+      throw new BadRequestException(
+        'RejectInvitationRequestDto',
+        'Invitation not found'
+      )
+    }
+
+    if (entity instanceof User) {
+      await this.rejectUserInvitation(entity, invitation)
+    }
+
+    if (entity instanceof Restaurant) {
+      await this.rejectRestaurantInvitation(entity, invitation)
+    }
+  }
+
+  private async rejectUserInvitation(user: User, invitation: Invitation) {
+    if (user.id === invitation.employeeId) {
+      await this.invitationsRepository.remove(invitation)
+    }
+  }
+
+  private async rejectRestaurantInvitation(
+    restaurant: Restaurant,
+    invitation: Invitation
+  ) {
+    if (restaurant.id === invitation.employerId) {
+      await this.invitationsRepository.remove(invitation)
+    }
   }
 }
