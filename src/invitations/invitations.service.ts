@@ -136,12 +136,14 @@ export class InvitationsService {
       employeeId
     })
 
-    if (invitations.length > 0) {
-      throw new BadRequestException(
-        'CreateInvitationRequestDto',
-        'Employee already invited'
-      )
-    }
+    invitations.forEach((invitation) => {
+      if (invitation.employerId === restaurant.id) {
+        throw new BadRequestException(
+          'CreateInvitationRequestDto',
+          'Employee already invited'
+        )
+      }
+    })
 
     const employee = await this.usersService.findUser({ id: employeeId })
 
