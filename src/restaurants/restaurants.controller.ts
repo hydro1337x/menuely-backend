@@ -25,6 +25,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { UpdateRestaurantImageRequestDto } from './dtos/update-restaurant-image-request.dto'
 import { UpdateRestaurantEmailRequestDto } from './dtos/update-restaurant-email-request.dto'
 import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
+import { FireEmployeeRequestDto } from './dtos/fire-employee-request.dto'
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -115,6 +116,19 @@ export class RestaurantsController {
       restaurant,
       updateRestaurantImageRequestDto,
       file
+    )
+  }
+
+  @Patch('me/fire-employee')
+  @UseGuards(RestaurantAccessJwtAuthGuard)
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  fireEmployee(
+    @Body() fireEmployeeRequestDto: FireEmployeeRequestDto,
+    @AuthenticatedEntity() restaurant: Restaurant
+  ) {
+    return this.restaurantsService.fireEmployee(
+      fireEmployeeRequestDto,
+      restaurant
     )
   }
 

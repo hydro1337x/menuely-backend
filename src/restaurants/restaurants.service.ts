@@ -29,6 +29,7 @@ import { MailService } from '../mail/mail.service'
 import { TokensService } from '../tokens/tokens.service'
 import { OffersService } from '../offers/offers.service'
 import { UserProfileResponseDto } from '../users/dtos/user-profile-response.dto'
+import { FireEmployeeRequestDto } from './dtos/fire-employee-request.dto'
 
 @Injectable()
 export class RestaurantsService {
@@ -241,6 +242,25 @@ export class RestaurantsService {
       )
     } finally {
       await queryRunner.release()
+    }
+  }
+
+  async fireEmployee(
+    fireEmployeeRequestDto: FireEmployeeRequestDto,
+    restaurant: Restaurant
+  ) {
+    const { employeeId } = fireEmployeeRequestDto
+
+    const employees = restaurant.employees.filter((employee) => {
+      return employee.id !== employeeId
+    })
+
+    restaurant.employees = employees
+
+    try {
+      await restaurant.save()
+    } catch (error) {
+      throw new InternalServerErrorException(error, 'Failed firing employee')
     }
   }
 
