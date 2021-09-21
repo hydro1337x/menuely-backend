@@ -16,12 +16,14 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
 
   private readonly productionOptions: TypeOrmModuleOptions = {
     type: 'postgres',
-    host: '/cloudsql/' + this.databaseConfiguration.cloudSqlConnectionName,
-    username: this.databaseConfiguration.databaseUser,
-    password: this.databaseConfiguration.databasePassword,
-    database: this.databaseConfiguration.databaseName,
+    url: this.databaseConfiguration.databaseUrl,
     autoLoadEntities: true,
-    synchronize: true
+    synchronize: true,
+    extra: {
+      ssl: {
+        rejectUnauthorized: false
+      }
+    }
   }
 
   private readonly developmentOptions: TypeOrmModuleOptions = {

@@ -172,7 +172,7 @@ export class RestaurantsService {
     const { email } = updateRestaurantEmailRequestDto
 
     restaurant.email = email
-    restaurant.isVerified = false
+    restaurant.isVerified = true
 
     try {
       await restaurant.save()

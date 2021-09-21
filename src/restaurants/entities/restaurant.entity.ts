@@ -44,7 +44,7 @@ export class Restaurant extends BaseEntity {
   @Column()
   postalCode: string
 
-  @Column({ default: false })
+  @Column({ default: true })
   isVerified: boolean
 
   @Column({ nullable: true })

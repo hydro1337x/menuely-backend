@@ -31,7 +31,7 @@ export class User extends BaseEntity {
   @Column()
   lastname: string
 
-  @Column({ default: false })
+  @Column({ default: true })
   isVerified: boolean
 
   @Column()

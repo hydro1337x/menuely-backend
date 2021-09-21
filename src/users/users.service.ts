@@ -145,7 +145,7 @@ export class UsersService {
     const { email } = updateUserEmailRequestDto
 
     user.email = email
-    user.isVerified = false
+    user.isVerified = true
 
     try {
       await user.save()
